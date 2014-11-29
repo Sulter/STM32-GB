@@ -1,28 +1,91 @@
 #include "../include/Cpu.h"
-#include <iostream>
 
 Cpu::Cpu():
-    opcodeMap{&Cpu::DCC, &Cpu::DCC}
+    opcodeMap{&Cpu::nop, &Cpu::nop}
 {
-    //set stack pointer, program counter, and the registers to 0
-    pc = 0;
-    sp = 0;
-    regA = 0;
-    regB = 0;
-    regC = 0;
-    regD = 0;
-    regE = 0;
-    regH = 0;
-    regL = 0;
-    regF = 0;
-
-    (this->*opcodeMap[0])();
-
+    reset();
+//    (this->*opcodeMap[0])();
 
 }
 
-
-void Cpu::DCC()
+void Cpu::reset()
 {
-    std::cout<<44;
+    //set stack pointer, program counter, and the registers to 0
+    pc = sp = regA = regB = regC = regD = regE = regH = regL = 0;
+    //set all the flags to 0
+    flagZ = flagN = flagH = flagC = 0;
+}
+
+void Cpu::setFlag(int8_t zero, int8_t substract, int8_t halfCarry, int8_t carry, const uint8_t & a, uint8_t temp)
+{
+    //take care of zero-flag (7th bit)
+    if(zero == 0)
+	flagZ = 0; //clear Z flag	
+    else if(zero == 1)
+	flagZ = 1;//set Z flag 
+    else if(zero == 2)
+    {
+	if(a==0)
+	    flagZ = 1;//set Z flag 
+	else
+	    flagZ = 0;; //clear Z flag	
+    }
+
+    //take care of substract-flag (6th bit)
+    if(substract == 0)
+	flagN = 0; //clear sub flag
+    else if(substract == 1)
+	flagN = 1;//set sub flag 
+ 
+    //take care of half-carry-flag (and half borrow) (5th bit)
+    if(halfCarry == 0)
+	flagH = 0; //clear half-carry-flag
+    else if(halfCarry == 1)
+	flagH = 1;//set the half-carry-flag
+    else if(halfCarry == 2) //temp has been added to A
+    {
+	uint8_t aTemp = a;
+	aTemp -=temp;
+	if(((aTemp+temp) & 0xF) == 0 && (aTemp+temp) != 256)
+	    flagH = 1; //clear half-carry-flag
+	else
+	    flagH = 0;//set the half-carry-flag
+
+    }
+    else if(halfCarry == 3)//temp has been substracted from A
+    {
+	uint8_t aTemp = a;
+	aTemp +=temp;
+	if(((aTemp-temp) & 0xF) == 0xF  && (aTemp-temp) != -1 )
+	    flagH = 1; //clear half-carry-flag
+	else
+	    flagH = 0;//set the half-carry-flag
+    }
+
+
+    /*
+      C++ promotes uint8_t to int when using arithmetic operators.
+      We can use this behaviour:
+      By undoing the last operation, and checking if the value is bigger or smaller than 0, we know if an overflow has happend.
+    */
+    //take care of carry-flag (and borrow) (4th bit)
+    if(carry == 0)
+	flagC = 0; //clear carry flag
+    else if(carry == 1)
+	flagC = 1; //set carry flag
+    else if(carry == 2) //temp has been added to A
+    {
+	if(a-temp < 0)
+	    flagC = 1; //there is a carry!
+	else
+	    flagC = 0; //there is no carry
+    }
+    else if(carry == 3) //temp has been substracted from A
+    {
+	if(a+temp > 255)
+	    flagC = 1; //there is a borrow!
+	else
+	    flagC = 0;//no borrow
+    }
+
 }
