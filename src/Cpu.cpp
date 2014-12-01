@@ -46,22 +46,21 @@ void Cpu::setFlag(int8_t zero, int8_t substract, int8_t halfCarry, int8_t carry,
     {
 	uint8_t aTemp = a;
 	aTemp -=temp;
-	if(((aTemp+temp) & 0xF) == 0 && (aTemp+temp) != 256)
-	    flagH = 1; //clear half-carry-flag
+	if( ((aTemp+temp) & 0xF) < (aTemp & 0xF))
+	    flagH = 1; //set half-carry-flag
 	else
-	    flagH = 0;//set the half-carry-flag
+	    flagH = 0;//clear the half-carry-flag
 
     }
     else if(halfCarry == 3)//temp has been substracted from A
     {
 	uint8_t aTemp = a;
 	aTemp +=temp;
-	if(((aTemp-temp) & 0xF) == 0xF  && (aTemp-temp) != -1 )
-	    flagH = 1; //clear half-carry-flag
+	if( (aTemp & 0xF) < ((aTemp-temp) & 0xF) )
+	    flagH = 1; //set half-carry-flag
 	else
-	    flagH = 0;//set the half-carry-flag
+	    flagH = 0;//clear the half-carry-flag
     }
-
 
     /*
       C++ promotes uint8_t to int when using arithmetic operators.
