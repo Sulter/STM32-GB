@@ -1,4 +1,5 @@
 #include <cstdint>
+#include "../include/Memory.h"
 
 class Cpu
 {
@@ -15,9 +16,15 @@ public:
 
     /*****************instructions****************/
     void nop();   //0x00
+    void ldBCnn();//0x01
+    void ldBCA(); //0x02
+    voic incBC(); //0x03
     void incB();  //0x04
     void decB();  //0x05
+    void ldBn();  //0x06
     void rlcA();  //0x07
+    void ldnnSP();//0x08
+    void decBC(); //0x0B
     void incC();  //0x0C
     void decC();  //0x0D
     void rrcA();  //0x0F
@@ -138,6 +145,9 @@ public:
 //A
 
 private:
+    //! Reference to the memory
+    Memory &MMU;
+
     //! pointer to opcode functions
     typedef void (Cpu::*opcodeFunctionPointer) ();
 

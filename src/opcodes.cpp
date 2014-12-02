@@ -1,4 +1,5 @@
 #include "../include/Cpu.h"
+#include <cstdint>
 #include <cstdio>
 
 void Cpu::nop()
@@ -6,6 +7,31 @@ void Cpu::nop()
     lastCycle = 4;
     pc++;
     printf("\nNop");
+}
+
+void Cpu::ldBCnn()
+{
+    regC = MMU.readByte(pc+1);
+    regB = MMU.readByte(pc+2);
+    lastCycle = 12;
+    pc+=3;
+}
+
+void Cpu::ldBCA()
+{
+    MMU.writeByte( (regB << 8) | regC, regA);
+    lastCycle = 8;
+    pc++;
+}
+
+voic Cpu::incBC()
+{
+    regC++;
+    if(!regC)
+	regB++;
+
+    lastCycle = 8;
+    pc++;
 }
 
 void Cpu::incB()
@@ -28,9 +54,16 @@ void Cpu::decB()
     pc++;//increase the program pc
 }
 
+void Cpu::ldBn()
+{
+    regB = MMU.readByte(pc+1);
+    lastCycle = 8;
+    pc+=2;
+}
+
 void Cpu::rlcA()
 {
-    unsigned char temp = regA & (0x80);
+    uint8_t temp = regA & (0x80);
     regA<<=1;
     regA|=temp>>7;
     setFlag(0,0,0,3,temp, 0xff);
@@ -39,6 +72,15 @@ void Cpu::rlcA()
     pc++;
 
     printf("\nregA: %d\npc: %d\nZ: %d N: %d H: %d C: %d\n",regA, pc, flagZ, flagN, flagH, flagC);
+}
+
+void Cpu::ldnnSP()
+{
+    uint16_t address = (MMU.readByte(pc+1) << 8) | MMU.readByte(pc+2);
+    MMU.writeByte(address, sp & 0xff);
+    MMU.writeByte(address+1, (sp >> 8) & 0xff);
+    lastCycle = 20;
+    pc+=3;
 }
 
 void Cpu::incC()
@@ -64,7 +106,7 @@ void Cpu::decC()
 void Cpu::rrcA()
 {
     printf("\nbefore operation regA: %d", regA);
-    unsigned char temp = regA & (0x01);
+    uint8_t temp = regA & (0x01);
     regA>>=1;
     regA|=temp<<7;
     printf("\ntemp is: %d", temp);
@@ -102,7 +144,7 @@ void Cpu::decD()
 
 void Cpu::rlA()
 {
-    unsigned char temp = regA & (0x80);
+    uint8_t temp = regA & (0x80);
     regA<<=1;
     regA|=flagC;
     setFlag(0,0,0,3,temp, 0xff);
@@ -136,7 +178,7 @@ void Cpu::decE()
 
 void Cpu::rrA()
 {
-    unsigned char temp = regA & (0x01);
+    uint8_t temp = regA & (0x01);
     regA>>=1;
     regA|=flagC<<7;
     setFlag(0,0,0,3,temp, 0xff);
