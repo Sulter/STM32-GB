@@ -1,15 +1,12 @@
+#pragma once
 #include <cstdint>
 #include <array>
 
 class Memory
 {
 public:
-    Memory();
     uint8_t readByte(uint16_t address) const;
     void writeByte(uint16_t address, uint8_t byte);
-
-    uint16_t readWord(uint16_t addressb) const;
-    void writeWord(uint16_t address, uint16_t word);    
 private:
     std::array<uint8_t, 0xffff> memoryArray{};
 };

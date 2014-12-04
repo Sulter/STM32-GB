@@ -24,7 +24,7 @@ void Cpu::ldBCA()
     pc++;
 }
 
-voic Cpu::incBC()
+void Cpu::incBC()
 {
     regC++;
     if(!regC)
@@ -83,6 +83,36 @@ void Cpu::ldnnSP()
     pc+=3;
 }
 
+void Cpu::addHLBC()
+{
+    uint16_t total = ((regH << 8) | regL) + ((regB << 8 ) | regC);
+    regH = total >> 8;
+    regL = total & 0xff;
+    setFlag(-1, 0, 2, 2, ((regH << 8) | regL), (uint16_t)((regB << 8 ) | regC)); //"- 0 H C"
+
+    lastCycle = 8;
+    pc++;
+}
+
+void Cpu::ldABC()
+{
+    regA = MMU.readByte((regB << 8) | regC);
+    
+    lastCycle = 8;
+    pc++;
+}
+
+void Cpu::decBC()
+{
+    if(!regC){
+	regB--;
+    }
+    regC--;
+
+    lastCycle = 8;
+    pc++;
+}
+
 void Cpu::incC()
 {
     regC++;//increase the register
@@ -103,6 +133,14 @@ void Cpu::decC()
     pc++;//increase the program pc
 }
 
+void Cpu::ldCn()
+{
+    regC = MMU.readByte(pc+1);
+
+    lastCycle = 8;
+    pc+=2;
+}
+
 void Cpu::rrcA()
 {
     printf("\nbefore operation regA: %d", regA);
@@ -119,8 +157,36 @@ void Cpu::rrcA()
 }
 
 /*
-****************0x2x******************
+****************0x1x******************
 */
+
+void Cpu::ldDEnn()
+{
+    regE = MMU.readByte(pc+1);
+    regD = MMU.readByte(pc+2);
+    lastCycle = 12;
+    pc+=3;
+}
+
+void Cpu::ldDEA()
+{
+    MMU.writeByte( (regD << 8) | regE, regA);
+    lastCycle = 8;
+    pc++;
+}
+
+void Cpu::incDE()
+{
+    regE++;
+    if(!regE)
+	regD++;
+
+    lastCycle = 8;
+    pc++;
+
+    uint16_t test = (regD << 8) | regE;
+    printf("DE: %d\n", test);
+}
 
 void Cpu::incD()
 {
@@ -142,6 +208,13 @@ void Cpu::decD()
     pc++;//increase the program pc
 }
 
+void Cpu::ldDn()
+{
+    regD= MMU.readByte(pc+1);
+    lastCycle = 8;
+    pc+=2;
+}
+
 void Cpu::rlA()
 {
     uint8_t temp = regA & (0x80);
@@ -154,6 +227,42 @@ void Cpu::rlA()
 
     printf("\nregA: %d\npc: %d\nZ: %d N: %d H: %d C: %d\n",regA, pc, flagZ, flagN, flagH, flagC);
 
+}
+
+void Cpu::jrn()
+{
+    pc = pc + MMU.readByte(pc+1);
+    lastCycle = 12;
+}
+
+void Cpu::addHLDE()
+{
+    uint16_t total = ((regH << 8) | regL) + ((regD << 8 ) | regE);
+    regH = total >> 8;
+    regL = total & 0xff;
+    setFlag(-1, 0, 2, 2, ((regH << 8) | regL), (uint16_t)((regD << 8 ) | regE)); //"- 0 H C"
+
+    lastCycle = 8;
+    pc++;
+}
+
+void Cpu::ldADE()
+{
+    regA = MMU.readByte((regD << 8) | regE);
+    
+    lastCycle = 8;
+    pc++;
+}
+
+void Cpu::decDE()
+{
+    if(!regE){
+	regD--;
+    }
+    regE--;
+
+    lastCycle = 8;
+    pc++;
 }
 
 void Cpu::incE()
@@ -176,6 +285,14 @@ void Cpu::decE()
     pc++;//increase the program pc
 }
 
+void Cpu::ldEn()
+{
+    regE = MMU.readByte(pc+1);
+
+    lastCycle = 8;
+    pc+=2;
+}
+
 void Cpu::rrA()
 {
     uint8_t temp = regA & (0x01);
@@ -190,8 +307,38 @@ void Cpu::rrA()
 }
 
 /*
-****************0x3x******************
+****************0x2x******************
 */
+
+void Cpu::ldHLnn()
+{
+    regL = MMU.readByte(pc+1);
+    regH = MMU.readByte(pc+2);
+    lastCycle = 12;
+    pc+=3;
+}
+
+void Cpu::ldiHLA()
+{
+    MMU.writeByte( (regH << 8) | regL, regA);
+
+    regL++;
+    if(!regL)
+	regH++;
+
+    lastCycle = 8;
+    pc++;
+}
+
+void Cpu::incHL()
+{
+    regL++;
+    if(!regL)
+	regH++;
+
+    lastCycle = 8;
+    pc++;
+}
 
 void Cpu::incH()
 {
@@ -211,6 +358,24 @@ void Cpu::decH()
 
     lastCycle = 4;//add number of cycles
     pc++;//increase the program pc
+}
+
+void Cpu::ldHn()
+{
+    regH = MMU.readByte(pc+1);
+    lastCycle = 8;
+    pc+=2;
+}
+
+void Cpu::addHLHL()
+{
+    uint16_t total = ((regH << 8) | regL) + ((regH << 8 ) | regL);
+    regH = total >> 8;
+    regL = total & 0xff;
+    setFlag(-1, 0, 2, 2, ((regH << 8) | regL), (uint16_t)((regH << 8 ) | regL)); //"- 0 H C"
+
+    lastCycle = 8;
+    pc++;
 }
 
 void Cpu::incL()
@@ -236,7 +401,7 @@ void Cpu::decL()
 void Cpu::cpl()
 {
     regA = ~regA;
-    setFlag(-1, 1, 1, -1, 0, 0); //"- 1 1 -"
+    setFlag(-1, 1, 1, -1, 0, (uint8_t)0); //"- 1 1 -"
 
     lastCycle = 4;//add number of cycles
     pc++;//increase the program pc
@@ -279,7 +444,7 @@ void Cpu::incA()
     lastCycle = 4;//add number of cycles
     pc++;//increase the program pc
 
-    printf("\nINCregA: %d\npc: %d\nZ: %d N: %d H: %d C: %d\n",regA, pc, flagZ, flagN, flagH, flagC);
+//    printf("\nINCregA: %d\npc: %d\nZ: %d N: %d H: %d C: %d\n",regA, pc, flagZ, flagN, flagH, flagC);
 }
 
 void Cpu::decA()
