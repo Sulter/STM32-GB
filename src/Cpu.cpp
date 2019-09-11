@@ -1,11 +1,9 @@
 #include "../include/Cpu.h"
 
-Cpu::Cpu(Memory &m):
-    MMU(m), opcodeMap{&Cpu::nop, &Cpu::nop} 
+Cpu::Cpu():
+    opcodeMap{&Cpu::nop, &Cpu::nop} 
 {
     reset();
-//    (this->*opcodeMap[0])();
-
 }
 
 void Cpu::reset()

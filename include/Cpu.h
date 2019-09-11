@@ -10,7 +10,7 @@ public:
       Calls reset to reset all the pointers etc.
       Also sets up the arrays of pointer to the functions with instructions.
      */
-    Cpu(Memory &m);
+    Cpu();
 
     //! set stack pointer, program counter, and the registers to 0
     void reset();
@@ -164,7 +164,7 @@ public:
 
 private:
     //! Reference to the memory
-    Memory &MMU;
+    Memory MMU;
 
     //! pointer to opcode functions
     typedef void (Cpu::*opcodeFunctionPointer) ();
