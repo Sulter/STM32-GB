@@ -1,12 +1,13 @@
 language: cpp
 before_install:
-  - apt-get install libgtest-dev
+  - sudo apt-get install libgtest-dev cmake
 install:
   - cd /usr/src/gtest
-  - cmake CMakeLists.tx
-  - make
-  - cp *.a /usr/lib
+  - sudo cmake CMakeLists.txt
+  - sudo make
+  - sudo cp *.a /usr/lib
 script:
+  - cd $TRAVIS_BUILD_DIR
   - mkdir build
   - cd build
   - cmake ..
