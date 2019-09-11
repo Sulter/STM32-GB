@@ -1,4 +1,11 @@
 language: cpp
+before_install:
+  - apt-get install libgtest-dev
+install:
+  - cd /usr/src/gtest
+  - cmake CMakeLists.tx
+  - make
+  - cp *.a /usr/lib
 script:
   - mkdir build
   - cd build
