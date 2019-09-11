@@ -1,7 +1,7 @@
 cmake_minimum_required (VERSION 3.0)
 project (GBA CXX)
 
-add_compile_options (-Wfatal-errors -Wall -Wextra -Wpedantic -Werror -Og)
+add_compile_options (-std=c++17 -Wfatal-errors -Wall -Wextra -Wpedantic -Werror -Og)
 find_package (GTest REQUIRED)
 find_package (Threads REQUIRED)
 include_directories (${GTEST_INCLUDE_DIRS})
