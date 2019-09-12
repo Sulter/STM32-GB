@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdint>
+#include <functional>
 #include "../include/Memory.h"
 
 class Cpu
@@ -15,6 +16,14 @@ public:
   //! set stack pointer, program counter, and the registers to 0
   void reset();
 
+protected:
+  void runOpcode(uint16_t);
+  uint32_t getTotalCycles () const {return totalCycles;};
+  uint16_t getPC () const {return pc;};
+  
+    
+
+private:
   /*****************instructions****************/
   void nop();     //0x00
   void ldBCnn();  //0x01
@@ -161,15 +170,16 @@ public:
 
   //A
 
-private:
+
+
+
   //! Reference to the memory
   Memory MMU;
 
-  //! pointer to opcode functions
-  typedef void (Cpu::*opcodeFunctionPointer)();
+  static constexpr uint16_t opcodeNumber = 0xff * 2;
 
-  //! Array of pointers to opcode instructions.
-  const opcodeFunctionPointer opcodeMap[2];
+  //! pointer to opcode functions
+  std::array<std::function<void()>, opcodeNumber> opcodes;
 
   //! Array of pointers to the extended opcode instructions.
   //const opcodeFunctionPointer opcodeExtendedMap[2];
@@ -183,8 +193,14 @@ private:
   //Basic regsiters
   uint8_t regA, regB, regC, regD, regE, regH, regL;
 
-  //! register F flags
-  uint8_t flagZ, flagN, flagH, flagC;
+  //! zero flag
+  uint8_t flagZ;
+  //! substract flag
+  uint8_t flagN;
+  //! half-carry flag
+  uint8_t flagH;
+  //! carry flag
+  uint8_t flagC;
 
   //! Stores the clock cycles of the last insturction
   uint8_t lastCycle;
