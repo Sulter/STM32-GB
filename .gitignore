@@ -15,3 +15,5 @@ _deps
 doxy/
 #executable
 gba
+#other
+.vscode/*
