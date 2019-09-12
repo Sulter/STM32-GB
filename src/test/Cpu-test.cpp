@@ -4,24 +4,26 @@
 // The fixture for testing class Foo.
 class CpuTest : public ::testing::Test
 {
- protected:
-  CpuTest() {
+protected:
+  CpuTest()
+  {
   }
 
-  ~CpuTest() override {
+  ~CpuTest() override
+  {
   }
 
-  void SetUp() override {
+  void SetUp() override
+  {
   }
 
-  void TearDown() override {
+  void TearDown() override
+  {
   }
-
 
   Cpu cpu;
 };
 
-TEST_F(CpuTest, instruction1test) 
+TEST_F(CpuTest, instruction1test)
 {
-
 }

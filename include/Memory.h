@@ -5,10 +5,14 @@
 class Memory
 {
 public:
-    uint8_t readByte(uint16_t address) const;
-    void writeByte(uint16_t address, uint8_t byte);
+  Memory();
+  void clean();
+  uint8_t readByte(uint16_t address) const;
+  void writeByte(uint16_t address, uint8_t byte);
+
 private:
-    std::array<uint8_t, 0xffff> memoryArray{};
+  static constexpr uint16_t memorySize = 0xffff;
+  std::array<uint8_t, memorySize> memoryArray{};
 };
 
 /*

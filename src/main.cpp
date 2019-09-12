@@ -5,6 +5,6 @@
 
 int main()
 {
-    Cpu myCpu();
-    return 0;
+  Cpu myCpu();
+  return 0;
 }
