@@ -2,7 +2,7 @@
 #include "../../include/Cpu.h"
 
 // The fixture for testing class Foo.
-class CpuTest : public ::testing::Test
+class CpuTest : public Cpu, public ::testing::Test
 {
 protected:
   CpuTest()
@@ -20,10 +20,10 @@ protected:
   void TearDown() override
   {
   }
-
-  Cpu cpu;
 };
 
-TEST_F(CpuTest, instruction1test)
+TEST_F(CpuTest, pcNop)
 {
+  runOpcode(0x01);
+  EXPECT_EQ(getPC(), 3);
 }
