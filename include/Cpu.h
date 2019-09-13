@@ -18,10 +18,8 @@ public:
 
 protected:
   void runOpcode(uint16_t);
-  uint32_t getTotalCycles () const {return totalCycles;};
-  uint16_t getPC () const {return pc;};
-  
-    
+  uint32_t getTotalCycles() const { return totalCycles; };
+  uint16_t getPC() const { return regs.pc; };
 
 private:
   /*****************instructions****************/
@@ -170,9 +168,6 @@ private:
 
   //A
 
-
-
-
   //! Reference to the memory
   Memory MMU;
 
@@ -181,32 +176,31 @@ private:
   //! pointer to opcode functions
   std::array<std::function<void()>, opcodeNumber> opcodes;
 
-  //! Array of pointers to the extended opcode instructions.
-  //const opcodeFunctionPointer opcodeExtendedMap[2];
-
-  //! Program counter
-  uint16_t pc;
-
-  //! Stack pointer
-  uint16_t sp;
-
-  //Basic regsiters
-  uint8_t regA, regB, regC, regD, regE, regH, regL;
-
-  //! zero flag
-  uint8_t flagZ;
-  //! substract flag
-  uint8_t flagN;
-  //! half-carry flag
-  uint8_t flagH;
-  //! carry flag
-  uint8_t flagC;
-
   //! Stores the clock cycles of the last insturction
   uint8_t lastCycle;
 
   //! Stores the total amount of clock cycles ran
   uint32_t totalCycles;
+
+  struct registers
+  {
+    //! Program counter
+    uint16_t pc;
+    //! Stack pointer
+    uint16_t sp;
+    //Basic regsiters
+    uint8_t regA, regB, regC, regD, regE, regH, regL;
+    //! zero flag
+    uint8_t flagZ;
+    //! substract flag
+    uint8_t flagN;
+    //! half-carry flag
+    uint8_t flagH;
+    //! carry flag
+    uint8_t flagC;
+  };
+
+  struct registers regs = {};
 
   //! Sets the flags, according to settings
   /*!

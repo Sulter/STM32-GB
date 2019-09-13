@@ -5,156 +5,156 @@
 void Cpu::nop()
 {
   lastCycle = 4;
-  pc++;
+  regs.pc++;
   printf("\nNop");
 }
 
 void Cpu::ldBCnn()
 {
-  regC = MMU.readByte(pc + 1);
-  regB = MMU.readByte(pc + 2);
+  regs.regC = MMU.readByte(regs.pc + 1);
+  regs.regB = MMU.readByte(regs.pc + 2);
   lastCycle = 12;
-  pc += 3;
+  regs.pc += 3;
 }
 
 void Cpu::ldBCA()
 {
-  MMU.writeByte((regB << 8) | regC, regA);
+  MMU.writeByte((regs.regB << 8) | regs.regC, regs.regA);
   lastCycle = 8;
-  pc++;
+  regs.pc++;
 }
 
 void Cpu::incBC()
 {
-  regC++;
-  if (!regC)
-    regB++;
+  regs.regC++;
+  if (!regs.regC)
+    regs.regB++;
 
   lastCycle = 8;
-  pc++;
+  regs.pc++;
 }
 
 void Cpu::incB()
 {
-  regB++; //increase the register
+  regs.regB++; //increase the register
 
-  setFlag(2, 0, 2, -1, regB, 1); //"Z 0 H -"
+  setFlag(2, 0, 2, -1, regs.regB, 1); //"Z 0 H -"
 
   lastCycle = 4; //add number of cycles
-  pc++;          //increase the program pc
+  regs.pc++;     //increase the program regs.pc
 }
 
 void Cpu::decB()
 {
-  regB--; //decrease the register
+  regs.regB--; //decrease the register
 
-  setFlag(2, 1, 3, -1, regB, 1); //"Z 1 H -"
+  setFlag(2, 1, 3, -1, regs.regB, 1); //"Z 1 H -"
 
   lastCycle = 4; //add number of cycles
-  pc++;          //increase the program pc
+  regs.pc++;     //increase the program regs.pc
 }
 
 void Cpu::ldBn()
 {
-  regB = MMU.readByte(pc + 1);
+  regs.regB = MMU.readByte(regs.pc + 1);
   lastCycle = 8;
-  pc += 2;
+  regs.pc += 2;
 }
 
 void Cpu::rlcA()
 {
-  uint8_t temp = regA & (0x80);
-  regA <<= 1;
-  regA |= temp >> 7;
+  uint8_t temp = regs.regA & (0x80);
+  regs.regA <<= 1;
+  regs.regA |= temp >> 7;
   setFlag(0, 0, 0, 3, temp, 0xff);
 
   lastCycle = 4;
-  pc++;
+  regs.pc++;
 
-  printf("\nregA: %d\npc: %d\nZ: %d N: %d H: %d C: %d\n", regA, pc, flagZ, flagN, flagH, flagC);
+  printf("\nregA: %d\npc: %d\nZ: %d N: %d H: %d C: %d\n", regs.regA, regs.pc, regs.flagZ, regs.flagN, regs.flagH, regs.flagC);
 }
 
 void Cpu::ldnnSP()
 {
-  uint16_t address = (MMU.readByte(pc + 1) << 8) | MMU.readByte(pc + 2);
-  MMU.writeByte(address, sp & 0xff);
-  MMU.writeByte(address + 1, (sp >> 8) & 0xff);
+  uint16_t address = (MMU.readByte(regs.pc + 1) << 8) | MMU.readByte(regs.pc + 2);
+  MMU.writeByte(address, regs.sp & 0xff);
+  MMU.writeByte(address + 1, (regs.sp >> 8) & 0xff);
   lastCycle = 20;
-  pc += 3;
+  regs.pc += 3;
 }
 
 void Cpu::addHLBC()
 {
-  uint16_t total = ((regH << 8) | regL) + ((regB << 8) | regC);
-  regH = total >> 8;
-  regL = total & 0xff;
-  setFlag(-1, 0, 2, 2, ((regH << 8) | regL), (uint16_t)((regB << 8) | regC)); //"- 0 H C"
+  uint16_t total = ((regs.regH << 8) | regs.regL) + ((regs.regB << 8) | regs.regC);
+  regs.regH = total >> 8;
+  regs.regL = total & 0xff;
+  setFlag(-1, 0, 2, 2, ((regs.regH << 8) | regs.regL), (uint16_t)((regs.regB << 8) | regs.regC)); //"- 0 H C"
 
   lastCycle = 8;
-  pc++;
+  regs.pc++;
 }
 
 void Cpu::ldABC()
 {
-  regA = MMU.readByte((regB << 8) | regC);
+  regs.regA = MMU.readByte((regs.regB << 8) | regs.regC);
 
   lastCycle = 8;
-  pc++;
+  regs.pc++;
 }
 
 void Cpu::decBC()
 {
-  if (!regC)
+  if (!regs.regC)
   {
-    regB--;
+    regs.regB--;
   }
-  regC--;
+  regs.regC--;
 
   lastCycle = 8;
-  pc++;
+  regs.pc++;
 }
 
 void Cpu::incC()
 {
-  regC++; //increase the register
+  regs.regC++; //increase the register
 
-  setFlag(2, 0, 2, -1, regC, 1); //"Z 0 H -"
+  setFlag(2, 0, 2, -1, regs.regC, 1); //"Z 0 H -"
 
   lastCycle = 4; //add number of cycles
-  pc++;          //increase the program pc
+  regs.pc++;     //increase the program regs.pc
 }
 
 void Cpu::decC()
 {
-  regC--; //decrease the register
+  regs.regC--; //decrease the register
 
-  setFlag(2, 1, 3, -1, regC, 1); //"Z 1 H -"
+  setFlag(2, 1, 3, -1, regs.regC, 1); //"Z 1 H -"
 
   lastCycle = 4; //add number of cycles
-  pc++;          //increase the program pc
+  regs.pc++;     //increase the program regs.pc
 }
 
 void Cpu::ldCn()
 {
-  regC = MMU.readByte(pc + 1);
+  regs.regC = MMU.readByte(regs.pc + 1);
 
   lastCycle = 8;
-  pc += 2;
+  regs.pc += 2;
 }
 
 void Cpu::rrcA()
 {
-  printf("\nbefore operation regA: %d", regA);
-  uint8_t temp = regA & (0x01);
-  regA >>= 1;
-  regA |= temp << 7;
+  printf("\nbefore operation regs.regA: %d", regs.regA);
+  uint8_t temp = regs.regA & (0x01);
+  regs.regA >>= 1;
+  regs.regA |= temp << 7;
   printf("\ntemp is: %d", temp);
   setFlag(0, 0, 0, 3, 0xff, temp);
 
   lastCycle = 4;
-  pc++;
+  regs.pc++;
 
-  printf("\nregA: %d\npc: %d\nZ: %d N: %d H: %d C: %d\n", regA, pc, flagZ, flagN, flagH, flagC);
+  printf("\nregA: %d\npc: %d\nZ: %d N: %d H: %d C: %d\n", regs.regA, regs.pc, regs.flagZ, regs.flagN, regs.flagH, regs.flagC);
 }
 
 /*
@@ -163,148 +163,148 @@ void Cpu::rrcA()
 
 void Cpu::ldDEnn()
 {
-  regE = MMU.readByte(pc + 1);
-  regD = MMU.readByte(pc + 2);
+  regs.regE = MMU.readByte(regs.pc + 1);
+  regs.regD = MMU.readByte(regs.pc + 2);
   lastCycle = 12;
-  pc += 3;
+  regs.pc += 3;
 }
 
 void Cpu::ldDEA()
 {
-  MMU.writeByte((regD << 8) | regE, regA);
+  MMU.writeByte((regs.regD << 8) | regs.regE, regs.regA);
   lastCycle = 8;
-  pc++;
+  regs.pc++;
 }
 
 void Cpu::incDE()
 {
-  regE++;
-  if (!regE)
-    regD++;
+  regs.regE++;
+  if (!regs.regE)
+    regs.regD++;
 
   lastCycle = 8;
-  pc++;
+  regs.pc++;
 
-  uint16_t test = (regD << 8) | regE;
+  uint16_t test = (regs.regD << 8) | regs.regE;
   printf("DE: %d\n", test);
 }
 
 void Cpu::incD()
 {
-  regD++; //increase the register
+  regs.regD++; //increase the register
 
-  setFlag(2, 0, 2, -1, regD, 1); //"Z 0 H -"
+  setFlag(2, 0, 2, -1, regs.regD, 1); //"Z 0 H -"
 
   lastCycle = 4; //add number of cycles
-  pc++;          //increase the program pc
+  regs.pc++;     //increase the program regs.pc
 }
 
 void Cpu::decD()
 {
-  regD--; //decrease the register
+  regs.regD--; //decrease the register
 
-  setFlag(2, 1, 3, -1, regD, 1); //"Z 1 H -"
+  setFlag(2, 1, 3, -1, regs.regD, 1); //"Z 1 H -"
 
   lastCycle = 4; //add number of cycles
-  pc++;          //increase the program pc
+  regs.pc++;     //increase the program regs.pc
 }
 
 void Cpu::ldDn()
 {
-  regD = MMU.readByte(pc + 1);
+  regs.regD = MMU.readByte(regs.pc + 1);
   lastCycle = 8;
-  pc += 2;
+  regs.pc += 2;
 }
 
 void Cpu::rlA()
 {
-  uint8_t temp = regA & (0x80);
-  regA <<= 1;
-  regA |= flagC;
+  uint8_t temp = regs.regA & (0x80);
+  regs.regA <<= 1;
+  regs.regA |= regs.flagC;
   setFlag(0, 0, 0, 3, temp, 0xff);
 
   lastCycle = 4;
-  pc++;
+  regs.pc++;
 
-  printf("\nregA: %d\npc: %d\nZ: %d N: %d H: %d C: %d\n", regA, pc, flagZ, flagN, flagH, flagC);
+  printf("\nregA: %d\npc: %d\nZ: %d N: %d H: %d C: %d\n", regs.regA, regs.pc, regs.flagZ, regs.flagN, regs.flagH, regs.flagC);
 }
 
 void Cpu::jrn()
 {
-  pc = pc + MMU.readByte(pc + 1);
+  regs.pc = regs.pc + MMU.readByte(regs.pc + 1);
   lastCycle = 12;
 }
 
 void Cpu::addHLDE()
 {
-  uint16_t total = ((regH << 8) | regL) + ((regD << 8) | regE);
-  regH = total >> 8;
-  regL = total & 0xff;
-  setFlag(-1, 0, 2, 2, ((regH << 8) | regL), (uint16_t)((regD << 8) | regE)); //"- 0 H C"
+  uint16_t total = ((regs.regH << 8) | regs.regL) + ((regs.regD << 8) | regs.regE);
+  regs.regH = total >> 8;
+  regs.regL = total & 0xff;
+  setFlag(-1, 0, 2, 2, ((regs.regH << 8) | regs.regL), (uint16_t)((regs.regD << 8) | regs.regE)); //"- 0 H C"
 
   lastCycle = 8;
-  pc++;
+  regs.pc++;
 }
 
 void Cpu::ldADE()
 {
-  regA = MMU.readByte((regD << 8) | regE);
+  regs.regA = MMU.readByte((regs.regD << 8) | regs.regE);
 
   lastCycle = 8;
-  pc++;
+  regs.pc++;
 }
 
 void Cpu::decDE()
 {
-  if (!regE)
+  if (!regs.regE)
   {
-    regD--;
+    regs.regD--;
   }
-  regE--;
+  regs.regE--;
 
   lastCycle = 8;
-  pc++;
+  regs.pc++;
 }
 
 void Cpu::incE()
 {
-  regE++; //increase the register
+  regs.regE++; //increase the register
 
-  setFlag(2, 0, 2, -1, regE, 1); //"Z 0 H -"
+  setFlag(2, 0, 2, -1, regs.regE, 1); //"Z 0 H -"
 
   lastCycle = 4; //add number of cycles
-  pc++;          //increase the program pc
+  regs.pc++;     //increase the program regs.pc
 }
 
 void Cpu::decE()
 {
-  regE--; //decrease the register
+  regs.regE--; //decrease the register
 
-  setFlag(2, 1, 3, -1, regE, 1); //"Z 1 H -"
+  setFlag(2, 1, 3, -1, regs.regE, 1); //"Z 1 H -"
 
   lastCycle = 4; //add number of cycles
-  pc++;          //increase the program pc
+  regs.pc++;     //increase the program regs.pc
 }
 
 void Cpu::ldEn()
 {
-  regE = MMU.readByte(pc + 1);
+  regs.regE = MMU.readByte(regs.pc + 1);
 
   lastCycle = 8;
-  pc += 2;
+  regs.pc += 2;
 }
 
 void Cpu::rrA()
 {
-  uint8_t temp = regA & (0x01);
-  regA >>= 1;
-  regA |= flagC << 7;
+  uint8_t temp = regs.regA & (0x01);
+  regs.regA >>= 1;
+  regs.regA |= regs.flagC << 7;
   setFlag(0, 0, 0, 3, temp, 0xff);
 
   lastCycle = 4;
-  pc++;
+  regs.pc++;
 
-  printf("\nregA: %d\npc: %d\nZ: %d N: %d H: %d C: %d\n", regA, pc, flagZ, flagN, flagH, flagC);
+  printf("\nregA: %d\npc: %d\nZ: %d N: %d H: %d C: %d\n", regs.regA, regs.pc, regs.flagZ, regs.flagN, regs.flagH, regs.flagC);
 }
 
 /*
@@ -313,99 +313,99 @@ void Cpu::rrA()
 
 void Cpu::ldHLnn()
 {
-  regL = MMU.readByte(pc + 1);
-  regH = MMU.readByte(pc + 2);
+  regs.regL = MMU.readByte(regs.pc + 1);
+  regs.regH = MMU.readByte(regs.pc + 2);
   lastCycle = 12;
-  pc += 3;
+  regs.pc += 3;
 }
 
 void Cpu::ldiHLA()
 {
-  MMU.writeByte((regH << 8) | regL, regA);
+  MMU.writeByte((regs.regH << 8) | regs.regL, regs.regA);
 
-  regL++;
-  if (!regL)
-    regH++;
+  regs.regL++;
+  if (!regs.regL)
+    regs.regH++;
 
   lastCycle = 8;
-  pc++;
+  regs.pc++;
 }
 
 void Cpu::incHL()
 {
-  regL++;
-  if (!regL)
-    regH++;
+  regs.regL++;
+  if (!regs.regL)
+    regs.regH++;
 
   lastCycle = 8;
-  pc++;
+  regs.pc++;
 }
 
 void Cpu::incH()
 {
-  regH++; //increase the register
+  regs.regH++; //increase the register
 
-  setFlag(2, 0, 2, -1, regH, 1); //"Z 0 H -"
+  setFlag(2, 0, 2, -1, regs.regH, 1); //"Z 0 H -"
 
   lastCycle = 4; //add number of cycles
-  pc++;          //increase the program pc
+  regs.pc++;     //increase the program regs.pc
 }
 
 void Cpu::decH()
 {
-  regH--; //decrease the register
+  regs.regH--; //decrease the register
 
-  setFlag(2, 1, 3, -1, regH, 1); //"Z 1 H -"
+  setFlag(2, 1, 3, -1, regs.regH, 1); //"Z 1 H -"
 
   lastCycle = 4; //add number of cycles
-  pc++;          //increase the program pc
+  regs.pc++;     //increase the program regs.pc
 }
 
 void Cpu::ldHn()
 {
-  regH = MMU.readByte(pc + 1);
+  regs.regH = MMU.readByte(regs.pc + 1);
   lastCycle = 8;
-  pc += 2;
+  regs.pc += 2;
 }
 
 void Cpu::addHLHL()
 {
-  uint16_t total = ((regH << 8) | regL) + ((regH << 8) | regL);
-  regH = total >> 8;
-  regL = total & 0xff;
-  setFlag(-1, 0, 2, 2, ((regH << 8) | regL), (uint16_t)((regH << 8) | regL)); //"- 0 H C"
+  uint16_t total = ((regs.regH << 8) | regs.regL) + ((regs.regH << 8) | regs.regL);
+  regs.regH = total >> 8;
+  regs.regL = total & 0xff;
+  setFlag(-1, 0, 2, 2, ((regs.regH << 8) | regs.regL), (uint16_t)((regs.regH << 8) | regs.regL)); //"- 0 H C"
 
   lastCycle = 8;
-  pc++;
+  regs.pc++;
 }
 
 void Cpu::incL()
 {
-  regL++; //increase the register
+  regs.regL++; //increase the register
 
-  setFlag(2, 0, 2, -1, regL, 1); //"Z 0 H -"
+  setFlag(2, 0, 2, -1, regs.regL, 1); //"Z 0 H -"
 
   lastCycle = 4; //add number of cycles
-  pc++;          //increase the program pc
+  regs.pc++;     //increase the program regs.pc
 }
 
 void Cpu::decL()
 {
-  regL--; //decrease the register
+  regs.regL--; //decrease the register
 
-  setFlag(2, 1, 3, -1, regL, 1); //"Z 1 H -"
+  setFlag(2, 1, 3, -1, regs.regL, 1); //"Z 1 H -"
 
   lastCycle = 4; //add number of cycles
-  pc++;          //increase the program pc
+  regs.pc++;     //increase the program regs.pc
 }
 
 void Cpu::cpl()
 {
-  regA = ~regA;
+  regs.regA = ~regs.regA;
   setFlag(-1, 1, 1, -1, 0, (uint8_t)0); //"- 1 1 -"
 
   lastCycle = 4; //add number of cycles
-  pc++;          //increase the program pc
+  regs.pc++;     //increase the program regs.pc
 }
 
 /*
@@ -414,56 +414,56 @@ void Cpu::cpl()
 
 void Cpu::incSP()
 {
-  sp++;
+  regs.sp++;
 
-  pc++;
+  regs.pc++;
   lastCycle = 8;
 }
 
 void Cpu::scf()
 {
-  flagC = 1;
+  regs.flagC = 1;
 
   lastCycle = 4; //add number of cycles
-  pc++;          //increase the program pc
+  regs.pc++;     //increase the program regs.pc
 }
 
 void Cpu::decSP()
 {
-  sp--;
+  regs.sp--;
 
-  pc++;
+  regs.pc++;
   lastCycle = 8;
 }
 
 void Cpu::incA()
 {
-  regA++; //increase the register
+  regs.regA++; //increase the register
 
-  setFlag(2, 0, 2, -1, regA, 1); //"Z 0 H -"
+  setFlag(2, 0, 2, -1, regs.regA, 1); //"Z 0 H -"
 
   lastCycle = 4; //add number of cycles
-  pc++;          //increase the program pc
+  regs.pc++;     //increase the program regs.pc
 
-  //    printf("\nINCregA: %d\npc: %d\nZ: %d N: %d H: %d C: %d\n",regA, pc, flagZ, flagN, flagH, flagC);
+  //    printf("\nINCregA: %d\npc: %d\nZ: %d N: %d H: %d C: %d\n",regs.regA, regs.pc,regs.flagZ,regs.flagN,regs.flagH,regs.flagC);
 }
 
 void Cpu::decA()
 {
-  regA--; //decrease the register
+  regs.regA--; //decrease the register
 
-  setFlag(2, 1, 3, -1, regA, 1); //"Z 1 H -"
+  setFlag(2, 1, 3, -1, regs.regA, 1); //"Z 1 H -"
 
   lastCycle = 4; //add number of cycles
-  pc++;          //increase the program pc
+  regs.pc++;     //increase the program regs.pc
 }
 
 void Cpu::ccf()
 {
-  flagC = ~flagC;
-  flagC &= 0x01;
+  regs.flagC = ~regs.flagC;
+  regs.flagC &= 0x01;
   lastCycle = 4;
-  pc++;
+  regs.pc++;
 }
 
 /*
@@ -473,85 +473,85 @@ void Cpu::ccf()
 void Cpu::ldBB()
 {
   lastCycle = 4;
-  pc++;
+  regs.pc++;
 }
 void Cpu::ldBC()
 {
-  regB = regC;
+  regs.regB = regs.regC;
   lastCycle = 4;
-  pc++;
+  regs.pc++;
 }
 void Cpu::ldBD()
 {
-  regB = regD;
+  regs.regB = regs.regD;
   lastCycle = 4;
-  pc++;
+  regs.pc++;
 }
 void Cpu::ldBE()
 {
-  regB = regE;
+  regs.regB = regs.regE;
   lastCycle = 4;
-  pc++;
+  regs.pc++;
 }
 void Cpu::ldBH()
 {
-  regB = regH;
+  regs.regB = regs.regH;
   lastCycle = 4;
-  pc++;
+  regs.pc++;
 }
 void Cpu::ldBL()
 {
-  regB = regL;
+  regs.regB = regs.regL;
   lastCycle = 4;
-  pc++;
+  regs.pc++;
 }
 void Cpu::ldBA()
 {
-  regB = regA;
+  regs.regB = regs.regA;
   lastCycle = 4;
-  pc++;
+  regs.pc++;
 }
 
 void Cpu::ldCB()
 {
-  regC = regB;
+  regs.regC = regs.regB;
   lastCycle = 4;
-  pc++;
+  regs.pc++;
 }
 void Cpu::ldCC()
 {
   lastCycle = 4;
-  pc++;
+  regs.pc++;
 }
 void Cpu::ldCD()
 {
-  regC = regD;
+  regs.regC = regs.regD;
   lastCycle = 4;
-  pc++;
+  regs.pc++;
 }
 void Cpu::ldCE()
 {
-  regC = regE;
+  regs.regC = regs.regE;
   lastCycle = 4;
-  pc++;
+  regs.pc++;
 }
 void Cpu::ldCH()
 {
-  regC = regH;
+  regs.regC = regs.regH;
   lastCycle = 4;
-  pc++;
+  regs.pc++;
 }
 void Cpu::ldCL()
 {
-  regC = regL;
+  regs.regC = regs.regL;
   lastCycle = 4;
-  pc++;
+  regs.pc++;
 }
 void Cpu::ldCA()
 {
-  regC = regA;
+  regs.regC = regs.regA;
   lastCycle = 4;
-  pc++;
+  regs.pc++;
 }
 
 /*
@@ -560,86 +560,86 @@ void Cpu::ldCA()
 
 void Cpu::ldDB()
 {
-  regD = regB;
+  regs.regD = regs.regB;
   lastCycle = 4;
-  pc++;
+  regs.pc++;
 }
 void Cpu::ldDC()
 {
-  regD = regC;
+  regs.regD = regs.regC;
   lastCycle = 4;
-  pc++;
+  regs.pc++;
 }
 void Cpu::ldDD()
 {
   lastCycle = 4;
-  pc++;
+  regs.pc++;
 }
 void Cpu::ldDE()
 {
-  regD = regE;
+  regs.regD = regs.regE;
   lastCycle = 4;
-  pc++;
+  regs.pc++;
 }
 void Cpu::ldDH()
 {
-  regD = regH;
+  regs.regD = regs.regH;
   lastCycle = 4;
-  pc++;
+  regs.pc++;
 }
 void Cpu::ldDL()
 {
-  regD = regL;
+  regs.regD = regs.regL;
   lastCycle = 4;
-  pc++;
+  regs.pc++;
 }
 void Cpu::ldDA()
 {
-  regD = regA;
+  regs.regD = regs.regA;
   lastCycle = 4;
-  pc++;
+  regs.pc++;
 }
 
 void Cpu::ldEB()
 {
-  regE = regB;
+  regs.regE = regs.regB;
   lastCycle = 4;
-  pc++;
+  regs.pc++;
 }
 void Cpu::ldEC()
 {
-  regE = regC;
+  regs.regE = regs.regC;
   lastCycle = 4;
-  pc++;
+  regs.pc++;
 }
 void Cpu::ldED()
 {
-  regE = regD;
+  regs.regE = regs.regD;
   lastCycle = 4;
-  pc++;
+  regs.pc++;
 }
 void Cpu::ldEE()
 {
   lastCycle = 4;
-  pc++;
+  regs.pc++;
 }
 void Cpu::ldEH()
 {
-  regE = regH;
+  regs.regE = regs.regH;
   lastCycle = 4;
-  pc++;
+  regs.pc++;
 }
 void Cpu::ldEL()
 {
-  regE = regL;
+  regs.regE = regs.regL;
   lastCycle = 4;
-  pc++;
+  regs.pc++;
 }
 void Cpu::ldEA()
 {
-  regE = regA;
+  regs.regE = regs.regA;
   lastCycle = 4;
-  pc++;
+  regs.pc++;
 }
 
 /*
@@ -648,86 +648,86 @@ void Cpu::ldEA()
 
 void Cpu::ldHB()
 {
-  regH = regB;
+  regs.regH = regs.regB;
   lastCycle = 4;
-  pc++;
+  regs.pc++;
 }
 void Cpu::ldHC()
 {
-  regH = regC;
+  regs.regH = regs.regC;
   lastCycle = 4;
-  pc++;
+  regs.pc++;
 }
 void Cpu::ldHD()
 {
-  regH = regD;
+  regs.regH = regs.regD;
   lastCycle = 4;
-  pc++;
+  regs.pc++;
 }
 void Cpu::ldHE()
 {
-  regH = regE;
+  regs.regH = regs.regE;
   lastCycle = 4;
-  pc++;
+  regs.pc++;
 }
 void Cpu::ldHH()
 {
   lastCycle = 4;
-  pc++;
+  regs.pc++;
 }
 void Cpu::ldHL()
 {
-  regH = regL;
+  regs.regH = regs.regL;
   lastCycle = 4;
-  pc++;
+  regs.pc++;
 }
 void Cpu::ldHA()
 {
-  regH = regA;
+  regs.regH = regs.regA;
   lastCycle = 4;
-  pc++;
+  regs.pc++;
 }
 
 void Cpu::ldLB()
 {
-  regL = regB;
+  regs.regL = regs.regB;
   lastCycle = 4;
-  pc++;
+  regs.pc++;
 }
 void Cpu::ldLC()
 {
-  regL = regC;
+  regs.regL = regs.regC;
   lastCycle = 4;
-  pc++;
+  regs.pc++;
 }
 void Cpu::ldLD()
 {
-  regL = regD;
+  regs.regL = regs.regD;
   lastCycle = 4;
-  pc++;
+  regs.pc++;
 }
 void Cpu::ldLE()
 {
-  regL = regE;
+  regs.regL = regs.regE;
   lastCycle = 4;
-  pc++;
+  regs.pc++;
 }
 void Cpu::ldLH()
 {
-  regL = regH;
+  regs.regL = regs.regH;
   lastCycle = 4;
-  pc++;
+  regs.pc++;
 }
 void Cpu::ldLL()
 {
   lastCycle = 4;
-  pc++;
+  regs.pc++;
 }
 void Cpu::ldLA()
 {
-  regL = regA;
+  regs.regL = regs.regA;
   lastCycle = 4;
-  pc++;
+  regs.pc++;
 }
 
 /*
@@ -736,44 +736,44 @@ void Cpu::ldLA()
 
 void Cpu::ldAB()
 {
-  regA = regB;
+  regs.regA = regs.regB;
   lastCycle = 4;
-  pc++;
+  regs.pc++;
 }
 void Cpu::ldAC()
 {
-  regA = regC;
+  regs.regA = regs.regC;
   lastCycle = 4;
-  pc++;
+  regs.pc++;
 }
 void Cpu::ldAD()
 {
-  regA = regD;
+  regs.regA = regs.regD;
   lastCycle = 4;
-  pc++;
+  regs.pc++;
 }
 void Cpu::ldAE()
 {
-  regA = regE;
+  regs.regA = regs.regE;
   lastCycle = 4;
-  pc++;
+  regs.pc++;
 }
 void Cpu::ldAH()
 {
-  regA = regH;
+  regs.regA = regs.regH;
   lastCycle = 4;
-  pc++;
+  regs.pc++;
 }
 void Cpu::ldAL()
 {
-  regA = regL;
+  regs.regA = regs.regL;
   lastCycle = 4;
-  pc++;
+  regs.pc++;
 }
 void Cpu::ldAA()
 {
   lastCycle = 4;
-  pc++;
+  regs.pc++;
 }
 
 /*
@@ -782,144 +782,144 @@ void Cpu::ldAA()
 
 void Cpu::addAB()
 {
-  regA += regB;
+  regs.regA += regs.regB;
 
-  setFlag(2, 0, 2, 2, regA, regB); //"Z 0 H C"
+  setFlag(2, 0, 2, 2, regs.regA, regs.regB); //"Z 0 H C"
 
   lastCycle = 4;
-  pc++;
+  regs.pc++;
 
-  printf("\nregA: %d\npc: %d\nZ: %d N: %d H: %d C: %d\n", regA, pc, flagZ, flagN, flagH, flagC);
+  printf("\nregA: %d\npc: %d\nZ: %d N: %d H: %d C: %d\n", regs.regA, regs.pc, regs.flagZ, regs.flagN, regs.flagH, regs.flagC);
 }
 
 void Cpu::addAC()
 {
-  regA += regC;
+  regs.regA += regs.regC;
 
-  setFlag(2, 0, 2, 2, regA, regC); //"Z 0 H C"
+  setFlag(2, 0, 2, 2, regs.regA, regs.regC); //"Z 0 H C"
 
   lastCycle = 4;
-  pc++;
+  regs.pc++;
 }
 
 void Cpu::addAD()
 {
-  regA += regD;
+  regs.regA += regs.regD;
 
-  setFlag(2, 0, 2, 2, regA, regD); //"Z 0 H C"
+  setFlag(2, 0, 2, 2, regs.regA, regs.regD); //"Z 0 H C"
 
   lastCycle = 4;
-  pc++;
+  regs.pc++;
 }
 
 void Cpu::addAE()
 {
-  regA += regE;
+  regs.regA += regs.regE;
 
-  setFlag(2, 0, 2, 2, regA, regE); //"Z 0 H C"
+  setFlag(2, 0, 2, 2, regs.regA, regs.regE); //"Z 0 H C"
 
   lastCycle = 4;
-  pc++;
+  regs.pc++;
 }
 
 void Cpu::addAH()
 {
-  regA += regH;
+  regs.regA += regs.regH;
 
-  setFlag(2, 0, 2, 2, regA, regH); //"Z 0 H C"
+  setFlag(2, 0, 2, 2, regs.regA, regs.regH); //"Z 0 H C"
 
   lastCycle = 4;
-  pc++;
+  regs.pc++;
 }
 
 void Cpu::addAL()
 {
-  regA += regL;
+  regs.regA += regs.regL;
 
-  setFlag(2, 0, 2, 2, regA, regL); //"Z 0 H C"
+  setFlag(2, 0, 2, 2, regs.regA, regs.regL); //"Z 0 H C"
 
   lastCycle = 4;
-  pc++;
+  regs.pc++;
 }
 
 void Cpu::addAA()
 {
-  regA += regA;
+  regs.regA += regs.regA;
 
-  setFlag(2, 0, 2, 2, regA, regA); //"Z 0 H C"
+  setFlag(2, 0, 2, 2, regs.regA, regs.regA); //"Z 0 H C"
 
   lastCycle = 4;
-  pc++;
+  regs.pc++;
 }
 
 void Cpu::adcAB()
 {
-  regA += regB + flagC;
+  regs.regA += regs.regB + regs.flagC;
 
-  setFlag(2, 0, 2, 2, regA, regB + flagC); //"Z 0 H C"
+  setFlag(2, 0, 2, 2, regs.regA, regs.regB + regs.flagC); //"Z 0 H C"
 
   lastCycle = 4;
-  pc++;
+  regs.pc++;
 }
 
 void Cpu::adcAC()
 {
-  regA += regC + flagC;
+  regs.regA += regs.regC + regs.flagC;
 
-  setFlag(2, 0, 2, 2, regA, regC + flagC); //"Z 0 H C"
+  setFlag(2, 0, 2, 2, regs.regA, regs.regC + regs.flagC); //"Z 0 H C"
 
   lastCycle = 4;
-  pc++;
+  regs.pc++;
 }
 
 void Cpu::adcAD()
 {
-  regA += regD + flagC;
+  regs.regA += regs.regD + regs.flagC;
 
-  setFlag(2, 0, 2, 2, regA, regD + flagC); //"Z 0 H C"
+  setFlag(2, 0, 2, 2, regs.regA, regs.regD + regs.flagC); //"Z 0 H C"
 
   lastCycle = 4;
-  pc++;
+  regs.pc++;
 }
 
 void Cpu::adcAE()
 {
-  regA += regE + flagC;
+  regs.regA += regs.regE + regs.flagC;
 
-  setFlag(2, 0, 2, 2, regA, regE + flagC); //"Z 0 H C"
+  setFlag(2, 0, 2, 2, regs.regA, regs.regE + regs.flagC); //"Z 0 H C"
 
   lastCycle = 4;
-  pc++;
+  regs.pc++;
 }
 
 void Cpu::adcAH()
 {
-  regA += regH + flagC;
+  regs.regA += regs.regH + regs.flagC;
 
-  setFlag(2, 0, 2, 2, regA, regH + flagC); //"Z 0 H C"
+  setFlag(2, 0, 2, 2, regs.regA, regs.regH + regs.flagC); //"Z 0 H C"
 
   lastCycle = 4;
-  pc++;
+  regs.pc++;
 }
 
 void Cpu::adcAL()
 {
-  regA += regL + flagC;
+  regs.regA += regs.regL + regs.flagC;
 
-  setFlag(2, 0, 2, 2, regA, regL + flagC); //"Z 0 H C"
+  setFlag(2, 0, 2, 2, regs.regA, regs.regL + regs.flagC); //"Z 0 H C"
 
   lastCycle = 4;
-  pc++;
+  regs.pc++;
 }
 
 void Cpu::adcAA()
 {
-  regA += regA + flagC;
+  regs.regA += regs.regA + regs.flagC;
 
-  setFlag(2, 0, 2, 2, regA, regA + flagC); //"Z 0 H C"
+  setFlag(2, 0, 2, 2, regs.regA, regs.regA + regs.flagC); //"Z 0 H C"
 
   lastCycle = 4;
-  pc++;
+  regs.pc++;
 }
 
 /*
@@ -928,142 +928,142 @@ void Cpu::adcAA()
 
 void Cpu::subAB()
 {
-  regA -= regB;
+  regs.regA -= regs.regB;
 
-  setFlag(2, 1, 3, 3, regA, regB); //"Z 1 H C"
+  setFlag(2, 1, 3, 3, regs.regA, regs.regB); //"Z 1 H C"
 
   lastCycle = 4;
-  pc++;
+  regs.pc++;
 }
 
 void Cpu::subAC()
 {
-  regA -= regC;
+  regs.regA -= regs.regC;
 
-  setFlag(2, 1, 3, 3, regA, regC); //"Z 1 H C"
+  setFlag(2, 1, 3, 3, regs.regA, regs.regC); //"Z 1 H C"
 
   lastCycle = 4;
-  pc++;
+  regs.pc++;
 }
 
 void Cpu::subAD()
 {
-  regA -= regD;
+  regs.regA -= regs.regD;
 
-  setFlag(2, 1, 3, 3, regA, regD); //"Z 1 H C"
+  setFlag(2, 1, 3, 3, regs.regA, regs.regD); //"Z 1 H C"
 
   lastCycle = 4;
-  pc++;
+  regs.pc++;
 }
 
 void Cpu::subAE()
 {
-  regA -= regE;
+  regs.regA -= regs.regE;
 
-  setFlag(2, 1, 3, 3, regA, regE); //"Z 1 H C"
+  setFlag(2, 1, 3, 3, regs.regA, regs.regE); //"Z 1 H C"
 
   lastCycle = 4;
-  pc++;
+  regs.pc++;
 }
 
 void Cpu::subAH()
 {
-  regA -= regH;
+  regs.regA -= regs.regH;
 
-  setFlag(2, 1, 3, 3, regA, regH); //"Z 1 H C"
+  setFlag(2, 1, 3, 3, regs.regA, regs.regH); //"Z 1 H C"
 
   lastCycle = 4;
-  pc++;
+  regs.pc++;
 }
 
 void Cpu::subAL()
 {
-  regA -= regL;
+  regs.regA -= regs.regL;
 
-  setFlag(2, 1, 3, 3, regA, regL); //"Z 1 H C"
+  setFlag(2, 1, 3, 3, regs.regA, regs.regL); //"Z 1 H C"
 
   lastCycle = 4;
-  pc++;
+  regs.pc++;
 }
 
 void Cpu::subAA()
 {
-  regA -= regA;
+  regs.regA -= regs.regA;
 
-  setFlag(2, 1, 3, 3, regA, regA); //"Z 1 H C"
+  setFlag(2, 1, 3, 3, regs.regA, regs.regA); //"Z 1 H C"
 
   lastCycle = 4;
-  pc++;
+  regs.pc++;
 }
 
 void Cpu::sbcAB()
 {
-  regA -= regB + flagC;
+  regs.regA -= regs.regB + regs.flagC;
 
-  setFlag(2, 1, 3, 3, regA, regB + flagC); //"Z 1 H C"
+  setFlag(2, 1, 3, 3, regs.regA, regs.regB + regs.flagC); //"Z 1 H C"
 
   lastCycle = 4;
-  pc++;
+  regs.pc++;
 }
 
 void Cpu::sbcAC()
 {
-  regA -= regC + flagC;
+  regs.regA -= regs.regC + regs.flagC;
 
-  setFlag(2, 1, 3, 3, regA, regC + flagC); //"Z 1 H C"
+  setFlag(2, 1, 3, 3, regs.regA, regs.regC + regs.flagC); //"Z 1 H C"
 
   lastCycle = 4;
-  pc++;
+  regs.pc++;
 }
 
 void Cpu::sbcAD()
 {
-  regA -= regD + flagC;
+  regs.regA -= regs.regD + regs.flagC;
 
-  setFlag(2, 1, 3, 3, regA, regD + flagC); //"Z 1 H C"
+  setFlag(2, 1, 3, 3, regs.regA, regs.regD + regs.flagC); //"Z 1 H C"
 
   lastCycle = 4;
-  pc++;
+  regs.pc++;
 }
 
 void Cpu::sbcAE()
 {
-  regA -= regE + flagC;
+  regs.regA -= regs.regE + regs.flagC;
 
-  setFlag(2, 1, 3, 3, regA, regE + flagC); //"Z 1 H C"
+  setFlag(2, 1, 3, 3, regs.regA, regs.regE + regs.flagC); //"Z 1 H C"
 
   lastCycle = 4;
-  pc++;
+  regs.pc++;
 }
 
 void Cpu::sbcAH()
 {
-  regA -= regH + flagC;
+  regs.regA -= regs.regH + regs.flagC;
 
-  setFlag(2, 1, 3, 3, regA, regH + flagC); //"Z 1 H C"
+  setFlag(2, 1, 3, 3, regs.regA, regs.regH + regs.flagC); //"Z 1 H C"
 
   lastCycle = 4;
-  pc++;
+  regs.pc++;
 }
 
 void Cpu::sbcAL()
 {
-  regA -= regL + flagC;
+  regs.regA -= regs.regL + regs.flagC;
 
-  setFlag(2, 1, 3, 3, regA, regL + flagC); //"Z 1 H C"
+  setFlag(2, 1, 3, 3, regs.regA, regs.regL + regs.flagC); //"Z 1 H C"
 
   lastCycle = 4;
-  pc++;
+  regs.pc++;
 }
 
 void Cpu::sbcAA()
 {
-  regA -= regA + flagC;
+  regs.regA -= regs.regA + regs.flagC;
 
-  setFlag(2, 1, 3, 3, regA, regA + flagC); //"Z 1 H C"
+  setFlag(2, 1, 3, 3, regs.regA, regs.regA + regs.flagC); //"Z 1 H C"
 
   lastCycle = 4;
-  pc++;
+  regs.pc++;
 }
 
 /*
