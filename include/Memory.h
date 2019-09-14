@@ -1,6 +1,7 @@
 #pragma once
 #include <cstdint>
 #include <array>
+#include <algorithm>
 
 class Memory
 {
@@ -10,9 +11,25 @@ public:
   uint8_t readByte(uint16_t address) const;
   void writeByte(uint16_t address, uint8_t byte);
 
+  //special IO registers which writing to or reading from does stuff
+  enum IOregisters: uint16_t {P1 = 0xff00};
+
 private:
   static constexpr uint16_t memorySize = 0xffff;
   std::array<uint8_t, memorySize> memoryArray{};
+
+  void P1Call(uint16_t);
+  struct IOreg
+  {
+    using callbackT = void(Memory::*)(uint16_t);
+
+    IOreg(uint16_t d, callbackT cal): addr(d), callback(cal){};
+    bool operator==(const int nr) {return addr == nr;};
+    uint16_t addr;
+    callbackT callback;
+  };
+
+  std::array<IOreg, 1> IOregs = {IOreg(P1, &Memory::P1Call)};
 };
 
 /*
