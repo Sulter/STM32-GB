@@ -17,10 +17,29 @@ public:
   void reset();
 
 protected:
+  struct registers
+  {
+    //! Program counter
+    uint16_t pc;
+    //! Stack pointer
+    uint16_t sp;
+    //Basic regsiters
+    uint8_t regA, regB, regC, regD, regE, regH, regL;
+    //! zero flag
+    uint8_t flagZ;
+    //! substract flag
+    uint8_t flagN;
+    //! half-carry flag
+    uint8_t flagH;
+    //! carry flag
+    uint8_t flagC;
+  };
+
   void runOpcode(uint16_t);
   uint32_t getTotalCycles() const { return totalCycles; };
   uint16_t getPC() const { return regs.pc; };
-
+  Memory getMMU() const { return MMU;};
+  registers getRegisters() const { return regs;};
 private:
   /*****************instructions****************/
   void nop();     //0x00
@@ -182,25 +201,7 @@ private:
   //! Stores the total amount of clock cycles ran
   uint32_t totalCycles;
 
-  struct registers
-  {
-    //! Program counter
-    uint16_t pc;
-    //! Stack pointer
-    uint16_t sp;
-    //Basic regsiters
-    uint8_t regA, regB, regC, regD, regE, regH, regL;
-    //! zero flag
-    uint8_t flagZ;
-    //! substract flag
-    uint8_t flagN;
-    //! half-carry flag
-    uint8_t flagH;
-    //! carry flag
-    uint8_t flagC;
-  };
-
-  struct registers regs = {};
+  registers regs = {};
 
   //! Sets the flags, according to settings
   /*!
