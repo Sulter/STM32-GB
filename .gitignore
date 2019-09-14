@@ -15,5 +15,7 @@ _deps
 doxy/
 #executable
 gba
+#binaries/roms etc.
+binaries/*
 #other
 .vscode/*
