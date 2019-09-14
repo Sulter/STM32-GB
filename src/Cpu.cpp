@@ -47,6 +47,7 @@ Cpu::Cpu()
   opcodes[0x2C] = std::bind(&Cpu::incL, this);
   opcodes[0x2D] = std::bind(&Cpu::decL, this);
   opcodes[0x2F] = std::bind(&Cpu::cpl, this);
+  opcodes[0x31] = std::bind(&Cpu::ldSPnn, this);
   opcodes[0x33] = std::bind(&Cpu::incSP, this);
   opcodes[0x37] = std::bind(&Cpu::scf, this);
   opcodes[0x3B] = std::bind(&Cpu::decSP, this);
@@ -138,10 +139,22 @@ void Cpu::runOpcode(uint16_t opcode)
   totalCycles += lastCycle;
 }
 
+void Cpu::execute()
+{
+  runOpcode(fetchOpcode());
+}
+
+uint16_t Cpu::fetchOpcode()
+{
+  return MMU.readByte(regs.pc);
+}
+
 void Cpu::reset()
 {
   registers zeroed = {};
   regs = zeroed;
+  totalCycles = 0;
+  lastCycle = 0;
 }
 
 void Cpu::setFlag(int8_t zero, int8_t substract, int8_t halfCarry, int8_t carry, uint8_t a, uint8_t temp)

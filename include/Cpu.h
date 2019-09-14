@@ -3,6 +3,18 @@
 #include <functional>
 #include "../include/Memory.h"
 
+//TODO: move from std::function to function pointers
+//TODO: instructions for bootstrap ROM:
+//void xorA()    //0xAF
+//void ldHL()    //0xF8
+//void preCB()   //0xCB
+//void CBbit7H() //0x7C
+//void jrNZ()    //0x20
+//void callnn()  //0xCD
+//void cpn()     //0xFE
+//void pushBC()  //0xC5
+//void ret()     //0xC9
+
 class Cpu
 {
 public:
@@ -12,6 +24,9 @@ public:
       Also sets up the arrays of pointer to the functions with instructions.
      */
   Cpu();
+
+  //! Executes next instruction
+  void execute();
 
   //! set stack pointer, program counter, and the registers to 0
   void reset();
@@ -35,11 +50,13 @@ protected:
     uint8_t flagC;
   };
 
+  uint16_t fetchOpcode();
   void runOpcode(uint16_t);
   uint32_t getTotalCycles() const { return totalCycles; };
   uint16_t getPC() const { return regs.pc; };
-  Memory getMMU() const { return MMU;};
-  registers getRegisters() const { return regs;};
+  Memory& getMMU() { return MMU; };
+  registers getRegisters() const { return regs; };
+
 private:
   /*****************instructions****************/
   void nop();     //0x00
@@ -89,12 +106,13 @@ private:
   void cpl();     //0x2F
 
   //3
-  void incSP(); //0x33
-  void scf();   //0x37
-  void decSP(); //0x3B
-  void incA();  //0x3C
-  void decA();  //0x3D
-  void ccf();   //0x3F
+  void ldSPnn(); //0x31
+  void incSP();  //0x33
+  void scf();    //0x37
+  void decSP();  //0x3B
+  void incA();   //0x3C
+  void decA();   //0x3D
+  void ccf();    //0x3F
 
   //4
   void ldBB(); //0x40
