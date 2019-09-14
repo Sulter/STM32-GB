@@ -5,6 +5,13 @@ Memory::Memory()
   memoryArray.fill(0);
 }
 
+void Memory::injectBoot()
+{
+  //logo is injected into cardrige only for testing purposes
+  std::copy(logo.begin(), logo.end(), memoryArray.begin() + logoAdr);
+  std::copy(bootstrap.begin(), bootstrap.end(), memoryArray.begin());
+}
+
 void Memory::P1Call(uint16_t)
 {
 }
