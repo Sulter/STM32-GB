@@ -13,9 +13,9 @@ with open("instructions.txt") as f:
 
         instrL.append(nr)
 
-    missingInstrL = []
-    for x in range(0, len(instrL)):
-      if str(x) not in instrL[x]:
-        missingInstrL.append(instrL[x])
-    print("missing instructions: " + str(len(missingInstrL)))
-    print(missingInstrL)
+    # missingInstrL = []
+    # for x in range(0, len(instrL)):
+    #   if str(x) not in instrL[x]:
+    #     missingInstrL.append(instrL[x])
+    # print("missing instructions: " + str(len(missingInstrL)))
+    # print(missingInstrL)

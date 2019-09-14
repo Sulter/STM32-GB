@@ -45,12 +45,13 @@
   void cpl();     //0x2F
 
   //3
-  void incSP(); //0x33
-  void scf();   //0x37
-  void decSP(); //0x3B
-  void incA();  //0x3C
-  void decA();  //0x3D
-  void ccf();   //0x3F
+  void ldSPnn(); //0x31
+  void incSP();  //0x33
+  void scf();    //0x37
+  void decSP();  //0x3B
+  void incA();   //0x3C
+  void decA();   //0x3D
+  void ccf();    //0x3F
 
   //4
   void ldBB(); //0x40
