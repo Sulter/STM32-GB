@@ -412,6 +412,14 @@ void Cpu::cpl()
 ****************0x3x******************
 */
 
+void Cpu::ldSPnn()
+{
+  regs.sp = (MMU.readByte(regs.pc + 1) | (MMU.readByte(regs.pc + 2) << 8));
+
+  regs.pc += 3;
+  lastCycle = 12;
+}
+
 void Cpu::incSP()
 {
   regs.sp++;
