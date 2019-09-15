@@ -1,10 +1,11 @@
 #include "../include/Cpu.h"
+#include <cassert>
 
 void Cpu::noInstruction()
 {
   std::cout << "Not-implemented called !" << std::endl;
-  std::cout << "  op: 0x" << std::hex << fetchOpcode() << std::endl;
-  std::cout << regs << std::endl;
+  std::cout << getInfo();
+  assert(false);
 }
 
 void Cpu::nop()
@@ -303,6 +304,22 @@ void Cpu::rrA()
 ****************0x2x******************
 */
 
+void Cpu::jrnz()
+{
+  if (!regs.flagZ)
+  {
+    lastCycle = 12;
+    int8_t rel = MMU.readByte(regs.pc + 1);
+    regs.pc = regs.pc + rel;
+  }
+  else
+  {
+    lastCycle = 8;
+  }
+
+  regs.pc += 2;
+}
+
 void Cpu::ldHLnn()
 {
   regs.regL = MMU.readByte(regs.pc + 1);
@@ -468,6 +485,14 @@ void Cpu::decA()
 
   lastCycle = 4; //add number of cycles
   regs.pc++;     //increase the program regs.pc
+}
+
+void Cpu::ldAn()
+{
+  regs.regA = MMU.readByte(regs.pc + 1);
+  lastCycle = 8;
+  regs.pc += 2;
+  ;
 }
 
 void Cpu::ccf()
@@ -745,6 +770,13 @@ void Cpu::ldLA()
 /*
 ****************0x7x******************
 */
+
+void Cpu::ldHLA()
+{
+  MMU.writeByte((regs.regH << 8) | regs.regL, regs.regA);
+  lastCycle = 8;
+  regs.pc++;
+}
 
 void Cpu::ldAB()
 {
@@ -1087,4 +1119,65 @@ void Cpu::xorA()
   setFlag(2, 0, 0, 0, regs.regA, 1);
   lastCycle = 4;
   regs.pc++;
+}
+
+/*
+****************0xBx******************
+*/
+
+/*
+****************0xCx******************
+*/
+
+void Cpu::preCB()
+{
+  CB = CBval;
+  lastCycle = 4;
+  regs.pc++;
+}
+
+void Cpu::callnn()
+{
+  regs.sp -= 2;
+  MMU.writeByte(regs.sp + 1, (regs.pc + 1) >> 8);
+  MMU.writeByte(regs.sp, regs.pc + 2);
+  regs.pc = (MMU.readByte(regs.pc + 2) << 8) | MMU.readByte(regs.pc + 1);
+}
+
+/*
+****************0xDx******************
+*/
+
+/*
+****************0xEx******************
+*/
+
+void Cpu::ldhnA()
+{
+  MMU.writeByte(0xff + MMU.readByte(regs.pc + 1), regs.regA);
+
+  lastCycle = 12;
+  regs.pc += 2;
+}
+
+void Cpu::ldCCA()
+{
+  MMU.writeByte(0xff + regs.regC, regs.regA);
+
+  lastCycle += 8;
+  regs.pc++;
+}
+
+/*
+****************CB 0xCx******************
+*/
+
+void Cpu::CBbit7H()
+{
+  uint8_t tmp = regs.regH & (1 << 7);
+  setFlag(2, 0, 1, -1, tmp, 1);
+
+  lastCycle = 8;
+  regs.pc++;
+  CB = 0;
 }

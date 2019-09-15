@@ -8,10 +8,6 @@
 //TODO: move from std::function to function pointers
 //TODO: make setFlag override share the 99% of the code they share....
 //TODO: instructions for bootstrap ROM:
-//void preCB()   //0xCB
-//void CBbit7H() //0x7C
-//void jrNZ()    //0x20
-//void callnn()  //0xCD
 //void cpn()     //0xFE
 //void pushBC()  //0xC5
 //void ret()     //0xC9
@@ -31,6 +27,8 @@ public:
 
   //! set stack pointer, program counter, and the registers to 0
   void reset();
+
+  std::string getInfo();
 
 protected:
   struct registers
@@ -111,6 +109,7 @@ private:
   void rrA();     //0x1F
 
   //2
+  void jrnz();    //0x20
   void ldHLnn();  //0x21
   void ldiHLA();  //0x22
   void incHL();   //0x23
@@ -123,14 +122,15 @@ private:
   void cpl();     //0x2F
 
   //3
-  void ldSPnn(); //0x31
-  void ldiHLAm();//0x32
-  void incSP();  //0x33
-  void scf();    //0x37
-  void decSP();  //0x3B
-  void incA();   //0x3C
-  void decA();   //0x3D
-  void ccf();    //0x3F
+  void ldSPnn();  //0x31
+  void ldiHLAm(); //0x32
+  void incSP();   //0x33
+  void scf();     //0x37
+  void ldAn();    //0x38
+  void decSP();   //0x3B
+  void incA();    //0x3C
+  void decA();    //0x3D
+  void ccf();     //0x3F
 
   //4
   void ldBB(); //0x40
@@ -181,13 +181,14 @@ private:
   void ldLA(); //0x6F
 
   //7
-  void ldAB(); //0x78
-  void ldAC(); //0x79
-  void ldAD(); //0x7A
-  void ldAE(); //0x7B
-  void ldAH(); //0x7C
-  void ldAL(); //0x7D
-  void ldAA(); //0x7F
+  void ldHLA(); //0x77
+  void ldAB();  //0x78
+  void ldAC();  //0x79
+  void ldAD();  //0x7A
+  void ldAE();  //0x7B
+  void ldAH();  //0x7C
+  void ldAL();  //0x7D
+  void ldAA();  //0x7F
 
   //8
   void addAB(); //0x80
@@ -224,6 +225,21 @@ private:
   //A
   void xorA(); //0xAF
 
+  //B
+
+  //C
+  void preCB();  //0xCB
+  void callnn(); //0xCD
+
+  //D
+
+  //E
+  void ldhnA(); //0xE0
+  void ldCCA(); //0xE2
+
+  //CB7
+  void CBbit7H(); //0x7C
+
   //! Reference to the memory
   Memory MMU;
 
@@ -237,6 +253,9 @@ private:
 
   //! Stores the total amount of clock cycles ran
   uint32_t totalCycles;
+
+  static constexpr uint8_t CBval = 0xff;
+  uint8_t CB;
 
   registers regs = {};
 

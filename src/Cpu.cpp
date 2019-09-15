@@ -1,4 +1,5 @@
 #include "../include/Cpu.h"
+#include <sstream>
 
 Cpu::Cpu()
 {
@@ -37,6 +38,7 @@ Cpu::Cpu()
   opcodes[0x1D] = std::bind(&Cpu::decE, this);
   opcodes[0x1E] = std::bind(&Cpu::ldEn, this);
   opcodes[0x1F] = std::bind(&Cpu::rrA, this);
+  opcodes[0x20] = std::bind(&Cpu::jrnz, this);
   opcodes[0x21] = std::bind(&Cpu::ldHLnn, this);
   opcodes[0x22] = std::bind(&Cpu::ldiHLA, this);
   opcodes[0x23] = std::bind(&Cpu::incHL, this);
@@ -54,6 +56,7 @@ Cpu::Cpu()
   opcodes[0x3B] = std::bind(&Cpu::decSP, this);
   opcodes[0x3C] = std::bind(&Cpu::incA, this);
   opcodes[0x3D] = std::bind(&Cpu::decA, this);
+  opcodes[0x3E] = std::bind(&Cpu::ldAn, this);
   opcodes[0x3F] = std::bind(&Cpu::ccf, this);
   opcodes[0x40] = std::bind(&Cpu::ldBB, this);
   opcodes[0x41] = std::bind(&Cpu::ldBC, this);
@@ -97,6 +100,7 @@ Cpu::Cpu()
   opcodes[0x6C] = std::bind(&Cpu::ldLH, this);
   opcodes[0x6D] = std::bind(&Cpu::ldLL, this);
   opcodes[0x6F] = std::bind(&Cpu::ldLA, this);
+  opcodes[0x77] = std::bind(&Cpu::ldHLA, this);
   opcodes[0x78] = std::bind(&Cpu::ldAB, this);
   opcodes[0x79] = std::bind(&Cpu::ldAC, this);
   opcodes[0x7A] = std::bind(&Cpu::ldAD, this);
@@ -133,6 +137,24 @@ Cpu::Cpu()
   opcodes[0x9D] = std::bind(&Cpu::sbcAL, this);
   opcodes[0x9F] = std::bind(&Cpu::sbcAA, this);
   opcodes[0xAF] = std::bind(&Cpu::xorA, this);
+  opcodes[0xCB] = std::bind(&Cpu::preCB, this);
+  opcodes[0xCD] = std::bind(&Cpu::callnn, this);
+  opcodes[0xE0] = std::bind(&Cpu::ldhnA, this);
+  opcodes[0xE2] = std::bind(&Cpu::ldCCA, this);
+
+  //CB
+  opcodes[0x7C + CBval] = std::bind(&Cpu::CBbit7H, this);
+}
+
+std::string Cpu::getInfo()
+{
+  std::ostringstream stream;
+  stream << "  op: 0x" << std::hex << fetchOpcode()
+         << ((CB == CBval) ? " (CB)" : "")
+         << std::endl;
+  stream << regs << std::endl;
+
+  return stream.str();
 }
 
 void Cpu::runOpcode(uint16_t opcode)
@@ -143,7 +165,7 @@ void Cpu::runOpcode(uint16_t opcode)
 
 void Cpu::execute()
 {
-  runOpcode(fetchOpcode());
+  runOpcode(fetchOpcode() + CB);
 }
 
 uint16_t Cpu::fetchOpcode()
@@ -157,6 +179,7 @@ void Cpu::reset()
   regs = zeroed;
   totalCycles = 0;
   lastCycle = 0;
+  CB = 0;
 }
 
 void Cpu::setFlag(int8_t zero, int8_t substract, int8_t halfCarry, int8_t carry, uint8_t a, uint8_t temp)
