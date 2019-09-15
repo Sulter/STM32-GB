@@ -4,7 +4,7 @@ Cpu::Cpu()
 {
   reset();
 
-  opcodes.fill(std::bind(&Cpu::nop, this));
+  opcodes.fill(std::bind(&Cpu::noInstruction, this));
 
   opcodes[0x00] = std::bind(&Cpu::nop, this);
   opcodes[0x01] = std::bind(&Cpu::ldBCnn, this);
@@ -48,6 +48,7 @@ Cpu::Cpu()
   opcodes[0x2D] = std::bind(&Cpu::decL, this);
   opcodes[0x2F] = std::bind(&Cpu::cpl, this);
   opcodes[0x31] = std::bind(&Cpu::ldSPnn, this);
+  opcodes[0x32] = std::bind(&Cpu::ldiHLAm, this);
   opcodes[0x33] = std::bind(&Cpu::incSP, this);
   opcodes[0x37] = std::bind(&Cpu::scf, this);
   opcodes[0x3B] = std::bind(&Cpu::decSP, this);
@@ -131,6 +132,7 @@ Cpu::Cpu()
   opcodes[0x9C] = std::bind(&Cpu::sbcAH, this);
   opcodes[0x9D] = std::bind(&Cpu::sbcAL, this);
   opcodes[0x9F] = std::bind(&Cpu::sbcAA, this);
+  opcodes[0xAF] = std::bind(&Cpu::xorA, this);
 }
 
 void Cpu::runOpcode(uint16_t opcode)

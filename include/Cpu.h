@@ -1,12 +1,13 @@
 #pragma once
 #include <cstdint>
 #include <functional>
+#include <iostream>
+#include <cstdio>
 #include "../include/Memory.h"
 
 //TODO: move from std::function to function pointers
+//TODO: make setFlag override share the 99% of the code they share....
 //TODO: instructions for bootstrap ROM:
-//void xorA()    //0xAF
-//void ldHL()    //0xF8
 //void preCB()   //0xCB
 //void CBbit7H() //0x7C
 //void jrNZ()    //0x20
@@ -48,16 +49,32 @@ protected:
     uint8_t flagH;
     //! carry flag
     uint8_t flagC;
+
+    friend std::ostream &operator<<(std::ostream &out, const registers &b)
+    {
+      char str16bit[30];
+      snprintf(str16bit, sizeof(str16bit), "  PC: 0x%04x SP: 0x%04x\n", b.pc, b.sp);
+      char str8bit[100];
+      snprintf(str8bit, sizeof(str8bit),
+               "regA: 0x%02x\nregB: 0x%02x regC: 0x%02x\nregD: 0x%02x regE: 0x%02x\nregH: 0x%02x regL: 0x%02x\n",
+               b.regA, b.regB, b.regC, b.regD, b.regE, b.regH, b.regL);
+      char strF[40];
+      snprintf(strF, sizeof(strF), "regF: 0b%d%d%d%d\n        ZNHC\n", b.flagZ, b.flagN, b.flagH, b.flagC);
+
+      out << str16bit << str8bit << strF;
+      return out;
+    }
   };
 
   uint16_t fetchOpcode();
   void runOpcode(uint16_t);
   uint32_t getTotalCycles() const { return totalCycles; };
   uint16_t getPC() const { return regs.pc; };
-  Memory& getMMU() { return MMU; };
+  Memory &getMMU() { return MMU; };
   registers getRegisters() const { return regs; };
 
 private:
+  void noInstruction();
   /*****************instructions****************/
   void nop();     //0x00
   void ldBCnn();  //0x01
@@ -107,6 +124,7 @@ private:
 
   //3
   void ldSPnn(); //0x31
+  void ldiHLAm();//0x32
   void incSP();  //0x33
   void scf();    //0x37
   void decSP();  //0x3B
@@ -204,6 +222,7 @@ private:
   void sbcAA(); //0x9F
 
   //A
+  void xorA(); //0xAF
 
   //! Reference to the memory
   Memory MMU;

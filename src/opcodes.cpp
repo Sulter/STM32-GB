@@ -1,12 +1,16 @@
 #include "../include/Cpu.h"
-#include <cstdint>
-#include <cstdio>
+
+void Cpu::noInstruction()
+{
+  std::cout << "Not-implemented called !" << std::endl;
+  std::cout << "  op: 0x" << std::hex << fetchOpcode() << std::endl;
+  std::cout << regs << std::endl;
+}
 
 void Cpu::nop()
 {
   lastCycle = 4;
   regs.pc++;
-  printf("\nNop");
 }
 
 void Cpu::ldBCnn()
@@ -70,8 +74,6 @@ void Cpu::rlcA()
 
   lastCycle = 4;
   regs.pc++;
-
-  printf("\nregA: %d\npc: %d\nZ: %d N: %d H: %d C: %d\n", regs.regA, regs.pc, regs.flagZ, regs.flagN, regs.flagH, regs.flagC);
 }
 
 void Cpu::ldnnSP()
@@ -144,17 +146,14 @@ void Cpu::ldCn()
 
 void Cpu::rrcA()
 {
-  printf("\nbefore operation regs.regA: %d", regs.regA);
   uint8_t temp = regs.regA & (0x01);
   regs.regA >>= 1;
   regs.regA |= temp << 7;
-  printf("\ntemp is: %d", temp);
   setFlag(0, 0, 0, 3, 0xff, temp);
 
   lastCycle = 4;
   regs.pc++;
-
-  printf("\nregA: %d\npc: %d\nZ: %d N: %d H: %d C: %d\n", regs.regA, regs.pc, regs.flagZ, regs.flagN, regs.flagH, regs.flagC);
+  ;
 }
 
 /*
@@ -184,9 +183,6 @@ void Cpu::incDE()
 
   lastCycle = 8;
   regs.pc++;
-
-  uint16_t test = (regs.regD << 8) | regs.regE;
-  printf("DE: %d\n", test);
 }
 
 void Cpu::incD()
@@ -225,8 +221,6 @@ void Cpu::rlA()
 
   lastCycle = 4;
   regs.pc++;
-
-  printf("\nregA: %d\npc: %d\nZ: %d N: %d H: %d C: %d\n", regs.regA, regs.pc, regs.flagZ, regs.flagN, regs.flagH, regs.flagC);
 }
 
 void Cpu::jrn()
@@ -303,8 +297,6 @@ void Cpu::rrA()
 
   lastCycle = 4;
   regs.pc++;
-
-  printf("\nregA: %d\npc: %d\nZ: %d N: %d H: %d C: %d\n", regs.regA, regs.pc, regs.flagZ, regs.flagN, regs.flagH, regs.flagC);
 }
 
 /*
@@ -420,6 +412,20 @@ void Cpu::ldSPnn()
   lastCycle = 12;
 }
 
+void Cpu::ldiHLAm()
+{
+  MMU.writeByte((regs.regH << 8) | regs.regL, regs.regA);
+
+  uint16_t tmp = ((regs.regH << 8) | regs.regL);
+  tmp--;
+
+  regs.regH = tmp >> 8;
+  regs.regL = tmp;
+
+  lastCycle = 8;
+  regs.pc++;
+}
+
 void Cpu::incSP()
 {
   regs.sp++;
@@ -452,8 +458,6 @@ void Cpu::incA()
 
   lastCycle = 4; //add number of cycles
   regs.pc++;     //increase the program regs.pc
-
-  //    printf("\nINCregA: %d\npc: %d\nZ: %d N: %d H: %d C: %d\n",regs.regA, regs.pc,regs.flagZ,regs.flagN,regs.flagH,regs.flagC);
 }
 
 void Cpu::decA()
@@ -796,8 +800,6 @@ void Cpu::addAB()
 
   lastCycle = 4;
   regs.pc++;
-
-  printf("\nregA: %d\npc: %d\nZ: %d N: %d H: %d C: %d\n", regs.regA, regs.pc, regs.flagZ, regs.flagN, regs.flagH, regs.flagC);
 }
 
 void Cpu::addAC()
@@ -1077,3 +1079,12 @@ void Cpu::sbcAA()
 /*
 ****************0xAx******************
 */
+
+void Cpu::xorA()
+{
+  regs.regA = regs.regA ^ regs.regA;
+
+  setFlag(2, 0, 0, 0, regs.regA, 1);
+  lastCycle = 4;
+  regs.pc++;
+}
