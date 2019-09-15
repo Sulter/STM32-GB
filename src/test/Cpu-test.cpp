@@ -32,6 +32,9 @@ TEST_F(CpuTest, integrationBlop)
 {
   //run bootstrap rom to see if we crash?
   getMMU().injectBoot();
-  for(size_t i = 0; i < 100; i++)
+  for (long long unsigned int i = 0; i < 1000000; i++)
     execute();
+
+  // std::cout << getInfo() << std::endl
+  //           << "Cyles: " << getTotalCycles();
 }
