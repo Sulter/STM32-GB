@@ -6,11 +6,10 @@
 #include "../include/Memory.h"
 
 //TODO: move from std::function to function pointers
+//TODO: rewrite all the copy-pasted opcodes into templates (depending on register, so we still end up with individual functions)
 //TODO: make setFlag override share the 99% of the code they share....
 //TODO: instructions for bootstrap ROM:
 //void cpn()     //0xFE
-//void pushBC()  //0xC5
-//void ret()     //0xC9
 
 class Cpu
 {
@@ -70,6 +69,145 @@ protected:
   uint16_t getPC() const { return regs.pc; };
   Memory &getMMU() { return MMU; };
   registers getRegisters() const { return regs; };
+  enum class instructions : uint16_t
+  {
+    nop = 0x00,
+    ldBCnn = 0x01,
+    ldBCA = 0x02,
+    incBC = 0x03,
+    incB = 0x04,
+    decB = 0x05,
+    ldBn = 0x06,
+    rlcA = 0x07,
+    ldnnSP = 0x08,
+    addHLBC = 0x09,
+    ldABC = 0x0A,
+    decBC = 0x0B,
+    incC = 0x0C,
+    decC = 0x0D,
+    ldCn = 0x0E,
+    rrcA = 0x0F,
+    ldDEnn = 0x11,
+    ldDEA = 0x12,
+    incDE = 0x13,
+    incD = 0x14,
+    decD = 0x15,
+    ldDn = 0x16,
+    rlA = 0x17,
+    jrn = 0x18,
+    addHLDE = 0x19,
+    ldADE = 0x1A,
+    decDE = 0x1B,
+    incE = 0x1C,
+    decE = 0x1D,
+    ldEn = 0x1E,
+    rrA = 0x1F,
+    jrnz = 0x20,
+    ldHLnn = 0x21,
+    ldiHLA = 0x22,
+    incHL = 0x23,
+    incH = 0x24,
+    decH = 0x25,
+    ldHn = 0x26,
+    addHLHL = 0x29,
+    incL = 0x2C,
+    decL = 0x2D,
+    cpl = 0x2F,
+    ldSPnn = 0x31,
+    ldiHLAm = 0x32,
+    incSP = 0x33,
+    scf = 0x37,
+    ldAn = 0x38,
+    decSP = 0x3B,
+    incA = 0x3C,
+    decA = 0x3D,
+    ccf = 0x3F,
+    ldBB = 0x40,
+    ldBC = 0x41,
+    ldBD = 0x42,
+    ldBE = 0x43,
+    ldBH = 0x44,
+    ldBL = 0x45,
+    ldBA = 0x47,
+    ldCB = 0x48,
+    ldCC = 0x49,
+    ldCD = 0x4A,
+    ldCE = 0x4B,
+    ldCH = 0x4C,
+    ldCL = 0x4D,
+    ldCA = 0x4F,
+    ldDB = 0x50,
+    ldDC = 0x51,
+    ldDD = 0x52,
+    ldDE = 0x53,
+    ldDH = 0x54,
+    ldDL = 0x55,
+    ldDA = 0x57,
+    ldEB = 0x58,
+    ldEC = 0x59,
+    ldED = 0x5A,
+    ldEE = 0x5B,
+    ldEH = 0x5C,
+    ldEL = 0x5D,
+    ldEA = 0x5F,
+    ldHB = 0x60,
+    ldHC = 0x61,
+    ldHD = 0x62,
+    ldHE = 0x63,
+    ldHH = 0x64,
+    ldHL = 0x65,
+    ldHA = 0x67,
+    ldLB = 0x68,
+    ldLC = 0x69,
+    ldLD = 0x6A,
+    ldLE = 0x6B,
+    ldLH = 0x6C,
+    ldLL = 0x6D,
+    ldLA = 0x6F,
+    ldHLA = 0x77,
+    ldAB = 0x78,
+    ldAC = 0x79,
+    ldAD = 0x7A,
+    ldAE = 0x7B,
+    ldAH = 0x7C,
+    ldAL = 0x7D,
+    ldAA = 0x7F,
+    addAB = 0x80,
+    addAC = 0x81,
+    addAD = 0x82,
+    addAE = 0x83,
+    addAH = 0x84,
+    addAL = 0x85,
+    addAA = 0x87,
+    adcAB = 0x88,
+    adcAC = 0x89,
+    adcAD = 0x8A,
+    adcAE = 0x8B,
+    adcAH = 0x8C,
+    adcAL = 0x8D,
+    adcAA = 0x8F,
+    subAB = 0x90,
+    subAC = 0x91,
+    subAD = 0x92,
+    subAE = 0x93,
+    subAH = 0x94,
+    subAL = 0x95,
+    subAA = 0x97,
+    sbcAB = 0x98,
+    sbcAC = 0x99,
+    sbcAD = 0x9A,
+    sbcAE = 0x9B,
+    sbcAH = 0x9C,
+    sbcAL = 0x9D,
+    sbcAA = 0x9F,
+    xorA = 0xAF,
+    popBC = 0xC1,
+    pushBC = 0xC5,
+    preCB = 0xCB,
+    callnn = 0xCD,
+    ldhnA = 0xE0,
+    ldCCA = 0xE2
+  };
 
 private:
   void noInstruction();
@@ -228,6 +366,9 @@ private:
   //B
 
   //C
+  void popBC();  //0xC1
+  void pushBC(); //0xC5
+  void ret();    //0xC9
   void preCB();  //0xCB
   void callnn(); //0xCD
 
@@ -236,6 +377,9 @@ private:
   //E
   void ldhnA(); //0xE0
   void ldCCA(); //0xE2
+
+  //CB1
+  void CBRLC(); //0x11
 
   //CB7
   void CBbit7H(); //0x7C

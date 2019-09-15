@@ -1129,6 +1129,32 @@ void Cpu::xorA()
 ****************0xCx******************
 */
 
+void Cpu::popBC()
+{
+  regs.regB = MMU.readByte(regs.sp++);
+  regs.regC = MMU.readByte(regs.sp++);
+
+  lastCycle += 12;
+  regs.pc++;
+}
+
+void Cpu::pushBC()
+{
+  MMU.writeByte(--regs.sp, regs.regC);
+  MMU.writeByte(--regs.sp, regs.regB);
+
+  lastCycle = 16;
+
+  regs.pc++;
+}
+
+void Cpu::ret()
+{
+  regs.pc = ((MMU.readByte(regs.sp) << 8) | MMU.readByte(regs.sp + 1));
+  regs.sp += 2;
+  lastCycle = 8;
+}
+
 void Cpu::preCB()
 {
   CB = CBval;
@@ -1138,10 +1164,11 @@ void Cpu::preCB()
 
 void Cpu::callnn()
 {
-  regs.sp -= 2;
-  MMU.writeByte(regs.sp + 1, (regs.pc + 1) >> 8);
-  MMU.writeByte(regs.sp, regs.pc + 2);
+  MMU.writeByte(--regs.sp, regs.pc + 2);
+  MMU.writeByte(--regs.sp, (regs.pc + 1) >> 8);
   regs.pc = (MMU.readByte(regs.pc + 2) << 8) | MMU.readByte(regs.pc + 1);
+
+  lastCycle = 24;
 }
 
 /*
@@ -1171,6 +1198,18 @@ void Cpu::ldCCA()
 /*
 ****************CB 0xCx******************
 */
+
+void Cpu::CBRLC()
+{
+  uint8_t temp = regs.regL & (0x80);
+  regs.regL <<= 1;
+  regs.regL |= regs.flagC;
+  setFlag((regs.regL == 0), 0, 0, 3, temp, 0xff);
+
+  lastCycle = 8;
+  regs.pc++;
+  CB = 0;
+}
 
 void Cpu::CBbit7H()
 {
