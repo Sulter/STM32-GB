@@ -34,7 +34,7 @@ private:
     callbackT callback;
   };
 
-  std::array<IOreg, 1> IOregs = {IOreg(P1, &Memory::P1Call)};
+  std::array<IOreg, 1> IOregs = {{IOreg(P1, &Memory::P1Call)}};
 
   static constexpr uint16_t logoAdr = 0x104;
   std::array<uint8_t, 48> logo{
