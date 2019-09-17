@@ -3,8 +3,10 @@
 
 void Cpu::noInstruction()
 {
+  printLastInstructions();
+
   std::cout << "Not-implemented called !" << std::endl;
-  std::cout << getInfo();
+  std::cout << getInfo(regs, MMU.readByte(regs.pc));
   assert(false);
 }
 
@@ -226,8 +228,11 @@ void Cpu::rlA()
 
 void Cpu::jrn()
 {
-  regs.pc = regs.pc + MMU.readByte(regs.pc + 1);
+  int8_t rel = MMU.readByte(regs.pc + 1);
+  regs.pc = regs.pc + rel;
+
   lastCycle = 12;
+  regs.pc += 2;
 }
 
 void Cpu::addHLDE()
@@ -377,6 +382,22 @@ void Cpu::ldHn()
   regs.pc += 2;
 }
 
+void Cpu::jrz()
+{
+  if (regs.flagZ)
+  {
+    lastCycle = 12;
+    int8_t rel = MMU.readByte(regs.pc + 1);
+    regs.pc = regs.pc + rel;
+  }
+  else
+  {
+    lastCycle = 8;
+  }
+
+  regs.pc += 2;
+}
+
 void Cpu::addHLHL()
 {
   uint16_t total = ((regs.regH << 8) | regs.regL) + ((regs.regH << 8) | regs.regL);
@@ -406,6 +427,14 @@ void Cpu::decL()
 
   lastCycle = 4; //add number of cycles
   regs.pc++;     //increase the program regs.pc
+}
+
+void Cpu::ldLn()
+{
+  regs.regL = MMU.readByte(regs.pc + 1);
+
+  lastCycle = 8;
+  regs.pc += 2;
 }
 
 void Cpu::cpl()
@@ -1134,7 +1163,7 @@ void Cpu::popBC()
   regs.regB = MMU.readByte(regs.sp++);
   regs.regC = MMU.readByte(regs.sp++);
 
-  lastCycle += 12;
+  lastCycle = 12;
   regs.pc++;
 }
 
@@ -1191,8 +1220,30 @@ void Cpu::ldCCA()
 {
   MMU.writeByte(0xff + regs.regC, regs.regA);
 
-  lastCycle += 8;
+  lastCycle = 8;
   regs.pc++;
+}
+
+void Cpu::ldnnA()
+{
+  MMU.writeByte(MMU.readByte(regs.pc + 1) | (MMU.readByte(regs.pc + 2) << 8), regs.regA);
+
+  lastCycle = 16;
+  regs.pc += 3;
+}
+
+/*
+****************0xFx******************
+*/
+
+void Cpu::cpn()
+{
+  uint8_t tmp = regs.regA - MMU.readByte(regs.pc + 1);
+
+  setFlag(2, 1, 3, 3, tmp, MMU.readByte(regs.pc + 1)); //"Z 1 H C"
+
+  lastCycle = 8;
+  regs.pc += 2;
 }
 
 /*

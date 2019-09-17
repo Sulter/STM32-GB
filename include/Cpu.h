@@ -9,7 +9,6 @@
 //TODO: rewrite all the copy-pasted opcodes into templates (depending on register, so we still end up with individual functions)
 //TODO: make setFlag override share the 99% of the code they share....
 //TODO: instructions for bootstrap ROM:
-//void cpn()     //0xFE
 
 class Cpu
 {
@@ -27,7 +26,9 @@ public:
   //! set stack pointer, program counter, and the registers to 0
   void reset();
 
-  std::string getInfo();
+  void printLastInstructions();
+
+  Memory &getMMU() { return MMU; };
 
 protected:
   struct registers
@@ -63,11 +64,12 @@ protected:
     }
   };
 
+  std::string getInfo(registers reg, uint16_t opcode);
   uint16_t fetchOpcode();
   void runOpcode(uint16_t);
   uint32_t getTotalCycles() const { return totalCycles; };
   uint16_t getPC() const { return regs.pc; };
-  Memory &getMMU() { return MMU; };
+
   registers getRegisters() const { return regs; };
   enum class instructions : uint16_t
   {
@@ -254,9 +256,11 @@ private:
   void incH();    //0x24
   void decH();    //0x25
   void ldHn();    //0x26
+  void jrz();     //0x28
   void addHLHL(); //0x29
   void incL();    //0x2C
   void decL();    //0x2D
+  void ldLn();    //0x2E
   void cpl();     //0x2F
 
   //3
@@ -377,6 +381,10 @@ private:
   //E
   void ldhnA(); //0xE0
   void ldCCA(); //0xE2
+  void ldnnA(); //0xEA
+
+  //F
+  void cpn(); //0xFE
 
   //CB1
   void CBRLC(); //0x11

@@ -1,5 +1,6 @@
 #include "../include/Cpu.h"
 #include <sstream>
+#include <cassert>
 
 Cpu::Cpu()
 {
@@ -45,9 +46,11 @@ Cpu::Cpu()
   opcodes[0x24] = std::bind(&Cpu::incH, this);
   opcodes[0x25] = std::bind(&Cpu::decH, this);
   opcodes[0x26] = std::bind(&Cpu::ldHn, this);
+  opcodes[0x28] = std::bind(&Cpu::jrz, this);
   opcodes[0x29] = std::bind(&Cpu::addHLHL, this);
   opcodes[0x2C] = std::bind(&Cpu::incL, this);
   opcodes[0x2D] = std::bind(&Cpu::decL, this);
+  opcodes[0x2E] = std::bind(&Cpu::ldLn, this);
   opcodes[0x2F] = std::bind(&Cpu::cpl, this);
   opcodes[0x31] = std::bind(&Cpu::ldSPnn, this);
   opcodes[0x32] = std::bind(&Cpu::ldiHLAm, this);
@@ -143,20 +146,26 @@ Cpu::Cpu()
   opcodes[0xCB] = std::bind(&Cpu::preCB, this);
   opcodes[0xCD] = std::bind(&Cpu::callnn, this);
   opcodes[0xE0] = std::bind(&Cpu::ldhnA, this);
+  opcodes[0xEA] = std::bind(&Cpu::ldnnA, this);
   opcodes[0xE2] = std::bind(&Cpu::ldCCA, this);
+  opcodes[0xFE] = std::bind(&Cpu::cpn, this);
 
   //CB
   opcodes[0x11 + CBval] = std::bind(&Cpu::CBRLC, this);
   opcodes[0x7C + CBval] = std::bind(&Cpu::CBbit7H, this);
 }
 
-std::string Cpu::getInfo()
+void Cpu::printLastInstructions()
+{
+}
+
+std::string Cpu::getInfo(registers reg, uint16_t opcode)
 {
   std::ostringstream stream;
-  stream << "  op: 0x" << std::hex << fetchOpcode()
+  stream << "  op: 0x" << std::hex << opcode
          << ((CB == CBval) ? " (CB)" : "")
          << std::endl;
-  stream << regs << std::endl;
+  stream << reg << std::endl;
 
   return stream.str();
 }
