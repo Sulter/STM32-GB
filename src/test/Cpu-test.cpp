@@ -28,13 +28,19 @@ TEST_F(CpuTest, pcNop)
   EXPECT_EQ(getPC(), 3);
 }
 
-TEST_F(CpuTest, integrationBlop)
+TEST_F(CpuTest, DMGboot)
 {
-  //run bootstrap rom to see if we crash?
+  //run bootstrap rom to see if we crash
   getMMU().injectBoot();
-  for (long long unsigned int i = 0; i < 1000000; i++)
+  getMMU().writeByte(0xff44, 0x90); //$0064, screen frame skip
+  getMMU().writeByte(0x0135, 0xe7); //ensure the checksum is correct
+  
+  long long unsigned int i = 0;
+  while(getRegisters().pc != 0x100)
+  {
     execute();
-
-  // std::cout << getInfo() << std::endl
-  //           << "Cyles: " << getTotalCycles();
+    ASSERT_LT(i++, 15000000); //shouldn't take more?
+    
+  }
+    
 }
