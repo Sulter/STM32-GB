@@ -1210,7 +1210,7 @@ void Cpu::callnn()
 
 void Cpu::ldhnA()
 {
-  MMU.writeByte(0xff + MMU.readByte(regs.pc + 1), regs.regA);
+  MMU.writeByte(0xff00 + MMU.readByte(regs.pc + 1), regs.regA);
 
   lastCycle = 12;
   regs.pc += 2;
@@ -1235,6 +1235,15 @@ void Cpu::ldnnA()
 /*
 ****************0xFx******************
 */
+
+void Cpu::ldhAn()
+{
+  regs.regA = MMU.readByte(0xff00 + MMU.readByte(regs.pc + 1));
+
+  lastCycle = 12;
+  regs.pc += 2;
+}
+
 
 void Cpu::cpn()
 {

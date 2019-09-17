@@ -384,7 +384,8 @@ private:
   void ldnnA(); //0xEA
 
   //F
-  void cpn(); //0xFE
+  void ldhAn(); //0xF0
+  void cpn();   //0xFE
 
   //CB1
   void CBRLC(); //0x11

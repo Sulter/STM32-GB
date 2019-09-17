@@ -148,6 +148,7 @@ Cpu::Cpu()
   opcodes[0xE0] = std::bind(&Cpu::ldhnA, this);
   opcodes[0xEA] = std::bind(&Cpu::ldnnA, this);
   opcodes[0xE2] = std::bind(&Cpu::ldCCA, this);
+  opcodes[0xF0] = std::bind(&Cpu::ldhAn, this);
   opcodes[0xFE] = std::bind(&Cpu::cpn, this);
 
   //CB
