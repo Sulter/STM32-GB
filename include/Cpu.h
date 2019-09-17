@@ -333,20 +333,21 @@ private:
   void ldAA();  //0x7F
 
   //8
-  void addAB(); //0x80
-  void addAC(); //0x81
-  void addAD(); //0x82
-  void addAE(); //0x83
-  void addAH(); //0x84
-  void addAL(); //0x85
-  void addAA(); //0x87
-  void adcAB(); //0x88
-  void adcAC(); //0x89
-  void adcAD(); //0x8A
-  void adcAE(); //0x8B
-  void adcAH(); //0x8C
-  void adcAL(); //0x8D
-  void adcAA(); //0x8F
+  void addAB();  //0x80
+  void addAC();  //0x81
+  void addAD();  //0x82
+  void addAE();  //0x83
+  void addAH();  //0x84
+  void addAL();  //0x85
+  void addAHL(); //0x86
+  void addAA();  //0x87
+  void adcAB();  //0x88
+  void adcAC();  //0x89
+  void adcAD();  //0x8A
+  void adcAE();  //0x8B
+  void adcAH();  //0x8C
+  void adcAL();  //0x8D
+  void adcAA();  //0x8F
 
   //9
   void subAB(); //0x90
@@ -368,6 +369,7 @@ private:
   void xorA(); //0xAF
 
   //B
+  void cpHL(); //0xBE
 
   //C
   void popBC();  //0xC1

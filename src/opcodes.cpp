@@ -913,6 +913,17 @@ void Cpu::addAL()
   regs.pc++;
 }
 
+void Cpu::addAHL()
+{
+  regs.regA += MMU.readByte((regs.regH << 8) | regs.regL);
+
+  setFlag(2, 0, 2, 2, regs.regA, MMU.readByte((regs.regH << 8) | regs.regL)); //"Z 0 H C"
+
+  lastCycle = 8;
+  regs.pc++;
+}
+
+
 void Cpu::addAA()
 {
   regs.regA += regs.regA;
@@ -1154,6 +1165,16 @@ void Cpu::xorA()
 ****************0xBx******************
 */
 
+void Cpu::cpHL()
+{
+  uint8_t tmp = regs.regA - MMU.readByte((regs.regH << 8) | regs.regL);
+
+  setFlag(2, 1, 3, 3, tmp, MMU.readByte((regs.regH << 8) | regs.regL)); //"Z 1 H C"
+
+  lastCycle = 8;
+  regs.pc ++;
+}
+
 /*
 ****************0xCx******************
 */
@@ -1218,7 +1239,7 @@ void Cpu::ldhnA()
 
 void Cpu::ldCCA()
 {
-  MMU.writeByte(0xff + regs.regC, regs.regA);
+  MMU.writeByte(0xff00 + regs.regC, regs.regA);
 
   lastCycle = 8;
   regs.pc++;

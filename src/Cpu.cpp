@@ -117,6 +117,7 @@ Cpu::Cpu()
   opcodes[0x83] = std::bind(&Cpu::addAE, this);
   opcodes[0x84] = std::bind(&Cpu::addAH, this);
   opcodes[0x85] = std::bind(&Cpu::addAL, this);
+  opcodes[0x86] = std::bind(&Cpu::addAHL, this);
   opcodes[0x87] = std::bind(&Cpu::addAA, this);
   opcodes[0x88] = std::bind(&Cpu::adcAB, this);
   opcodes[0x89] = std::bind(&Cpu::adcAC, this);
@@ -140,6 +141,7 @@ Cpu::Cpu()
   opcodes[0x9D] = std::bind(&Cpu::sbcAL, this);
   opcodes[0x9F] = std::bind(&Cpu::sbcAA, this);
   opcodes[0xAF] = std::bind(&Cpu::xorA, this);
+  opcodes[0xBE] = std::bind(&Cpu::cpHL, this);
   opcodes[0xC1] = std::bind(&Cpu::popBC, this);
   opcodes[0xC5] = std::bind(&Cpu::pushBC, this);
   opcodes[0xC9] = std::bind(&Cpu::ret, this);
