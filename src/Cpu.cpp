@@ -2,7 +2,7 @@
 #include <sstream>
 #include <cassert>
 
-Cpu::Cpu()
+Cpu::Cpu(Memory &mem) : MMU(mem)
 {
   reset();
 

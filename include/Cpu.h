@@ -18,7 +18,7 @@ public:
       Calls reset to reset all the pointers etc.
       Also sets up the arrays of pointer to the functions with instructions.
      */
-  Cpu();
+  Cpu(Memory &mem);
 
   //! Executes next instruction
   void execute();
@@ -30,7 +30,6 @@ public:
 
   Memory &getMMU() { return MMU; };
 
-protected:
   struct registers
   {
     //! Program counter
@@ -396,7 +395,7 @@ private:
   void CBbit7H(); //0x7C
 
   //! Reference to the memory
-  Memory MMU;
+  Memory &MMU;
 
   static constexpr uint16_t opcodeNumber = 0xff * 2;
 

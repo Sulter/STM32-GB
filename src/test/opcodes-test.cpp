@@ -1,11 +1,12 @@
 #include <gtest/gtest.h>
 #include "../../include/Cpu.h"
+#include "../../include/Memory.h"
 
 // The fixture for testing class Foo.
 class OpcodeTest : public Cpu, public ::testing::Test
 {
 protected:
-  OpcodeTest()
+  OpcodeTest() : Cpu(Cpu(MMU))
   {
   }
 
@@ -20,6 +21,8 @@ protected:
   void TearDown() override
   {
   }
+
+  Memory MMU;
 };
 
 TEST_F(OpcodeTest, ldSPnnByte)
