@@ -1,6 +1,6 @@
 language: cpp
 before_install:
-  - sudo apt-get install libgtest-dev cmake
+  - sudo apt-get install libgtest-dev cmake libsdl2-dev
 install:
   - cd /usr/src/gtest
   - sudo cmake CMakeLists.txt
