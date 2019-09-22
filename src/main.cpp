@@ -1,10 +1,8 @@
-#include "../include/Cpu.h"
-#include <iostream>
-#include <cstdint>
-#include <cstdio>
+#include "../include/Debugger.h"
 
 int main()
 {
-  Cpu myCpu();
+  Debugger prog;
+  prog.initGFX();
   return 0;
 }
