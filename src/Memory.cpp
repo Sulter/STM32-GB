@@ -1,8 +1,18 @@
 #include "../include/Memory.h"
+#include <cstdio>
 
 Memory::Memory()
 {
   memoryArray.fill(0);
+}
+
+void Memory::dumpMemory(uint16_t start, uint16_t stop)
+{
+  int count = 0;
+  std::for_each(memoryArray.begin() + start, memoryArray.begin() + stop,
+                [&count, start](uint8_t i) {
+                  printf("0x%04x: 0x%02x\n", start + count++, i);
+                });
 }
 
 void Memory::injectBoot()
@@ -12,8 +22,9 @@ void Memory::injectBoot()
   std::copy(bootstrap.begin(), bootstrap.end(), memoryArray.begin());
 }
 
-void Memory::P1Call(uint16_t)
+void Memory::P1Call(uint16_t, uint8_t val)
 {
+  printf("0x%02x\n", val);
 }
 
 void Memory::clean()
@@ -31,6 +42,6 @@ void Memory::writeByte(uint16_t address, uint8_t byte)
   memoryArray[address] = byte;
 
   auto it = std::find(IOregs.begin(), IOregs.end(), address);
-  if(it != IOregs.end())
-    (this->*it->Memory::IOreg::callback)(address);
+  if (it != IOregs.end())
+    (this->*it->Memory::IOreg::callback)(address, byte);
 }

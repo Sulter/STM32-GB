@@ -13,6 +13,8 @@ public:
   //injects bootstrap (logo and cardrige test) into rom
   void injectBoot();
 
+  void dumpMemory(uint16_t start, uint16_t stop);
+
   //special IO registers which writing to or reading from does stuff
   enum IOregisters : uint16_t
   {
@@ -23,10 +25,10 @@ private:
   static constexpr uint16_t memorySize = 0xffff;
   std::array<uint8_t, memorySize> memoryArray{};
 
-  void P1Call(uint16_t);
+  void P1Call(uint16_t, uint8_t);
   struct IOreg
   {
-    using callbackT = void (Memory::*)(uint16_t);
+    using callbackT = void (Memory::*)(uint16_t, uint8_t);
 
     IOreg(uint16_t d, callbackT cal) : addr(d), callback(cal){};
     bool operator==(const int nr) { return addr == nr; };
