@@ -10,6 +10,7 @@ find_package (OpenGL REQUIRED)
 
 include_directories (${GTEST_INCLUDE_DIRS})
 include_directories (${SDL2_INCLUDE_DIRS})
+include_directories (lib/imgui_club/imgui_memory_editor)
 include_directories (lib/glad/include)
 
 set(imguiSrc

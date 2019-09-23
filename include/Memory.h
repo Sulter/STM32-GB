@@ -6,6 +6,8 @@
 class Memory
 {
 public:
+  static constexpr uint16_t memorySize = 0xffff;
+
   Memory();
   void clean();
   uint8_t readByte(uint16_t address) const;
@@ -15,6 +17,8 @@ public:
 
   void dumpMemory(uint16_t start, uint16_t stop);
 
+  uint8_t* getMemory() {return memoryArray.data();};
+
   //special IO registers which writing to or reading from does stuff
   enum IOregisters : uint16_t
   {
@@ -22,7 +26,6 @@ public:
   };
 
 private:
-  static constexpr uint16_t memorySize = 0xffff;
   std::array<uint8_t, memorySize> memoryArray{};
 
   void P1Call(uint16_t, uint8_t);

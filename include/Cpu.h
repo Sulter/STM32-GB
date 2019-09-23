@@ -69,7 +69,7 @@ public:
   uint32_t getTotalCycles() const { return totalCycles; };
   uint16_t getPC() const { return regs.pc; };
 
-  registers getRegisters() const { return regs; };
+  registers &getRegisters() { return regs; };
   enum class instructions : uint16_t
   {
     nop = 0x00,
