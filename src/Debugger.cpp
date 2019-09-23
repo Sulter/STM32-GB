@@ -4,6 +4,8 @@
 #include "../lib/imgui/examples/imgui_impl_sdl.h"
 #include "../lib/imgui/examples/imgui_impl_opengl3.h"
 
+uint32_t global = 0xaaffaa;
+
 Debugger::Debugger() : cpu(MMU)
 {
   //setup memory - doesn't belong here!
@@ -13,32 +15,15 @@ Debugger::Debugger() : cpu(MMU)
 
   //setup register stuff
   Cpu::registers &regRef = cpu.getRegisters();
-
-  regs2B[0].reg = &regRef.pc;
-  regs2B[0].name = registerNames2B[0];
-  regs2B[1].reg = &regRef.sp;
-  regs2B[1].name = registerNames2B[1];
-
-  regs1B[0].reg = &regRef.regA;
-  regs1B[0].name = registerNames1B[0];
-  regs1B[1].reg = &regRef.regB;
-  regs1B[1].name = registerNames1B[1];
-  regs1B[2].reg = &regRef.regC;
-  regs1B[2].name = registerNames1B[2];
-  regs1B[3].reg = &regRef.regD;
-  regs1B[3].name = registerNames1B[3];
-  regs1B[4].reg = &regRef.regE;
-  regs1B[4].name = registerNames1B[4];
-  regs1B[5].reg = &regRef.regH;
-  regs1B[5].name = registerNames1B[5];
-  regs1B[6].reg = &regRef.regL;
-  regs1B[6].name = registerNames1B[6];
-}
-
-int Debugger::regValChange(ImGuiInputTextCallbackData *)
-{
-  std::cout << "change!" << std::endl;
-  return 1;
+  regDebug.registers.push_back(new DebugRegister<uint16_t>("pc", &regRef.pc));
+  regDebug.registers.push_back(new DebugRegister<uint16_t>("sp", &regRef.sp));
+  regDebug.registers.push_back(new DebugRegister<uint8_t>("A", &regRef.regA));
+  regDebug.registers.push_back(new DebugRegister<uint8_t>("B", &regRef.regB));
+  regDebug.registers.push_back(new DebugRegister<uint8_t>("C", &regRef.regC));
+  regDebug.registers.push_back(new DebugRegister<uint8_t>("D", &regRef.regD));
+  regDebug.registers.push_back(new DebugRegister<uint8_t>("E", &regRef.regE));
+  regDebug.registers.push_back(new DebugRegister<uint8_t>("H", &regRef.regH));
+  regDebug.registers.push_back(new DebugRegister<uint8_t>("L", &regRef.regL));
 }
 
 int Debugger::initGFX()
@@ -72,7 +57,7 @@ int Debugger::initGFX()
   SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
   SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
   SDL_WindowFlags window_flags = (SDL_WindowFlags)(SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
-  SDL_Window *window = SDL_CreateWindow("Dear ImGui SDL2+OpenGL3 example", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1280, 720, window_flags);
+  SDL_Window *window = SDL_CreateWindow("STM32-GB", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1280, 720, window_flags);
   SDL_GLContext gl_context = SDL_GL_CreateContext(window);
   SDL_GL_MakeCurrent(window, gl_context);
   SDL_GL_SetSwapInterval(1); // Enable vsync
@@ -191,29 +176,11 @@ int Debugger::initGFX()
     }
 
     //Registers window
-    //setup character widths
-    glyphWidth = ImGui::CalcTextSize("F").x + 1;
-    hexWidth = (float)(int)(glyphWidth * 2.0f);
-    ImGui::Begin("Registers");
+    regDebug.DrawWindow("Registers");
 
-    ImGuiInputTextFlags flags = ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_NoHorizontalScroll | ImGuiInputTextFlags_AlwaysInsertMode;
-    ImGui::Columns(2, nullptr, true);
-
-    size_t count = 0;
-    for (auto reg : regs2B)
-    {
-      ImGui::Text("%s", reg.name.c_str());
-      ImGui::NextColumn();
-      ImGui::PushItemWidth(hexWidth * 2.5);
-      if(ImGui::InputText(reg.getLabel(), reg.getEditBuf(), reg.editBufLenght, flags, Debugger::regValChange))
-      {
-        reg.applyBuffer();
-      }
-      ImGui::PopItemWidth();
-      ImGui::Separator();
-      ImGui::NextColumn();
-      count++;
-    }
+    //Debugger
+    ImGui::Begin("Debugger");
+    
     ImGui::End();
 
     //Memory window
