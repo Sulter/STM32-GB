@@ -8,7 +8,6 @@
 #include <type_traits>
 #include <memory>
 
-
 class Debugger
 {
 public:
@@ -19,8 +18,11 @@ private:
   static int regValChange(ImGuiInputTextCallbackData *data);
 
   RegisterDebug regDebug;
-
   Cpu cpu;
   Memory MMU;
   MemoryEditor memEditor;
+
+  bool freeRun = false;
+
+  uint32_t t0;
 };

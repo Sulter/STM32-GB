@@ -115,6 +115,7 @@ int Debugger::initGFX()
   ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
   // Main loop
+  t0 = SDL_GetTicks();
   bool done = false;
   while (!done)
   {
@@ -178,14 +179,68 @@ int Debugger::initGFX()
     //Registers window
     regDebug.DrawWindow("Registers");
 
-    //Debugger
-    ImGui::Begin("Debugger");
-
-    ImGui::End();
-
     //Memory window
-    ImGui::Begin("Memory");
-    memEditor.DrawContents(MMU.getMemory(), Memory::memorySize);
+    memEditor.DrawWindow("Memory", MMU.getMemory(), Memory::memorySize);
+
+    //Debugger window
+    ImGui::Begin("Debugger");
+    ImGui::BeginGroup();
+    ImGui::Columns(2, nullptr, true);
+    ImGui::Text("Address");
+    ImGui::NextColumn();
+    ImGui::Text("Value");
+    ImGui::Separator();
+    ImGui::NextColumn();
+
+    ImGui::Text("%04x", cpu.getPC() - 1);
+    ImGui::NextColumn();
+    ImGui::Text("%02x", MMU.readByte(cpu.getPC() - 1));
+    ImGui::NextColumn();
+    char buf[5];
+    sprintf(buf, "%04x", cpu.getPC());
+    ImGui::Selectable(buf, true, ImGuiSelectableFlags_SpanAllColumns);
+    ImGui::NextColumn();
+    ImGui::Text("%02x", MMU.readByte(cpu.getPC()));
+    ImGui::NextColumn();
+    ImGui::Text("%04x", cpu.getPC() + 1);
+    ImGui::NextColumn();
+    ImGui::Text("%02x", MMU.readByte(cpu.getPC() + 1));
+    ImGui::Columns(1);
+    ImGui::Spacing();
+    ImGui::EndGroup();
+
+    if (ImGui::IsKeyPressed(0x43)) //F10
+    {
+      cpu.execute();
+    }
+
+    if (ImGui::IsKeyPressed(0x3E)) //F5
+    {
+      freeRun = true;
+    }
+
+    if (ImGui::IsKeyPressed(0x42)) //F9
+    {
+      freeRun = false;
+    }
+
+    if (freeRun)
+    {
+      cpu.execute();
+    }
+
+    if (ImGui::Button("Step (F10)"))
+    {
+      cpu.execute();
+    }
+    if (ImGui::Button("Freerun (F5)"))
+    {
+      freeRun = true;
+    }
+    if (ImGui::Button("Stop (F9)"))
+    {
+      freeRun = false;
+    }
     ImGui::End();
 
     // Rendering
@@ -195,6 +250,17 @@ int Debugger::initGFX()
     glClear(GL_COLOR_BUFFER_BIT);
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
     SDL_GL_SwapWindow(window);
+
+    //process as much as necessary
+    uint32_t msPassed = SDL_GetTicks() - t0;
+    t0 = SDL_GetTicks();
+    if (freeRun)
+    {
+      for (uint32_t i = 0; i < msPassed * 1049; i += cpu.getLastCycle())
+      {
+        cpu.execute();
+      }
+    }
   }
 
   // Cleanup

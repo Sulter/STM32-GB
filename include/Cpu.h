@@ -67,6 +67,7 @@ public:
   uint16_t fetchOpcode();
   void runOpcode(uint16_t);
   uint32_t getTotalCycles() const { return totalCycles; };
+  uint8_t getLastCycle() const { return lastCycle; };
   uint16_t getPC() const { return regs.pc; };
 
   registers &getRegisters() { return regs; };
