@@ -15,15 +15,15 @@ Debugger::Debugger() : cpu(MMU)
 
   //setup register stuff
   Cpu::registers &regRef = cpu.getRegisters();
-  regDebug.registers.push_back(new DebugRegister<uint16_t>("pc", &regRef.pc));
-  regDebug.registers.push_back(new DebugRegister<uint16_t>("sp", &regRef.sp));
-  regDebug.registers.push_back(new DebugRegister<uint8_t>("A", &regRef.regA));
-  regDebug.registers.push_back(new DebugRegister<uint8_t>("B", &regRef.regB));
-  regDebug.registers.push_back(new DebugRegister<uint8_t>("C", &regRef.regC));
-  regDebug.registers.push_back(new DebugRegister<uint8_t>("D", &regRef.regD));
-  regDebug.registers.push_back(new DebugRegister<uint8_t>("E", &regRef.regE));
-  regDebug.registers.push_back(new DebugRegister<uint8_t>("H", &regRef.regH));
-  regDebug.registers.push_back(new DebugRegister<uint8_t>("L", &regRef.regL));
+  regDebug.registers.push_back(std::make_unique<DebugRegister<uint16_t>>("pc", &regRef.pc));
+  regDebug.registers.push_back(std::make_unique<DebugRegister<uint16_t>>("sp", &regRef.sp));
+  regDebug.registers.push_back(std::make_unique<DebugRegister<uint8_t>>("A", &regRef.regA));
+  regDebug.registers.push_back(std::make_unique<DebugRegister<uint8_t>>("B", &regRef.regB));
+  regDebug.registers.push_back(std::make_unique<DebugRegister<uint8_t>>("C", &regRef.regC));
+  regDebug.registers.push_back(std::make_unique<DebugRegister<uint8_t>>("D", &regRef.regD));
+  regDebug.registers.push_back(std::make_unique<DebugRegister<uint8_t>>("E", &regRef.regE));
+  regDebug.registers.push_back(std::make_unique<DebugRegister<uint8_t>>("H", &regRef.regH));
+  regDebug.registers.push_back(std::make_unique<DebugRegister<uint8_t>>("L", &regRef.regL));
 }
 
 int Debugger::initGFX()
@@ -180,7 +180,7 @@ int Debugger::initGFX()
 
     //Debugger
     ImGui::Begin("Debugger");
-    
+
     ImGui::End();
 
     //Memory window
