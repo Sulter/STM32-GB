@@ -22,9 +22,8 @@ void Memory::injectBoot()
   std::copy(bootstrap.begin(), bootstrap.end(), memoryArray.begin());
 }
 
-void Memory::P1Call(uint16_t, uint8_t val)
+void Memory::P1Call(uint16_t, uint8_t)
 {
-  printf("0x%02x\n", val);
 }
 
 void Memory::clean()
