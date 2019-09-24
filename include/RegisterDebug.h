@@ -8,37 +8,45 @@
 class DebugReg
 {
 public:
+  DebugReg(std::string name) : name(name), label("##" + name){};
+
   virtual char *getEditBuf() = 0;
   virtual void applyBuffer() = 0;
-  virtual const char *getLabel() = 0;
-  virtual std::string getName() = 0;
   virtual size_t getBufLenght() = 0;
+
+  std::string getName()
+  {
+    return name;
+  }
+
+  const char *getLabel()
+  {
+    return label.c_str();
+  };
+
+private:
+  std::string name;
+  std::string label;
+};
+
+template <size_t N>
+class DebugRegisterFlag : public DebugReg
+{
+  public:
+  private:
 };
 
 template <typename T>
 class DebugRegister : public DebugReg
 {
 public:
-  DebugRegister(std::string name, T *val) : name(name), label("##" + name), reg(val){};
+  DebugRegister(std::string name, T *val) : DebugReg(name), reg(val){};
   static_assert(std::is_same<T, uint8_t>::value || std::is_same<T, uint16_t>::value || std::is_same<T, uint32_t>::value,
-                "Only uint8_t and uint16_t registers allowed");
-
-  virtual ~DebugRegister(){};
-
-  static constexpr size_t editBufLenght = std::is_same<T, uint8_t>::value ? 3 : (std::is_same<T, uint16_t>::value ? 5 : 9 );
-  char editBuf[editBufLenght];
-  std::string name;
-  std::string label;
-  T *reg = nullptr;
+                "Only uint8_t, uint16_t and uint32_t registers allowed");
 
   size_t getBufLenght()
   {
     return editBufLenght;
-  }
-
-  std::string getName()
-  {
-    return name;
   }
 
   char *getEditBuf()
@@ -60,13 +68,13 @@ public:
 
   void applyBuffer()
   {
-    *reg = (int)strtol(editBuf, NULL, 16);
+    *reg = (unsigned int)strtol(editBuf, NULL, 16);
   }
 
-  const char *getLabel()
-  {
-    return label.c_str();
-  };
+private:
+  static constexpr size_t editBufLenght = std::is_same<T, uint8_t>::value ? 3 : (std::is_same<T, uint16_t>::value ? 5 : 9);
+  char editBuf[editBufLenght];
+  T *reg = nullptr;
 };
 
 class RegisterDebug
