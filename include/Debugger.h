@@ -23,6 +23,8 @@ private:
   MemoryEditor memEditor;
 
   bool freeRun = false;
+  bool breakPoint = false;
+  char breakpointVal[5] = "0000";
 
   uint32_t t0;
 };

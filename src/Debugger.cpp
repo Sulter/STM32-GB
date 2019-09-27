@@ -206,8 +206,10 @@ int Debugger::initGFX()
     ImGui::NextColumn();
     ImGui::Text("%02x", MMU.readByte(cpu.getPC() + 1));
     ImGui::Columns(1);
-    ImGui::Spacing();
+    ImGui::Separator();
     ImGui::EndGroup();
+    ImGui::NewLine();
+    
 
     if (ImGui::IsKeyPressed(0x43)) //F10
     {
@@ -217,6 +219,8 @@ int Debugger::initGFX()
     if (ImGui::IsKeyPressed(0x3E)) //F5
     {
       freeRun = true;
+      //always take one step, to get out of breakpoint
+      cpu.execute();
     }
 
     if (ImGui::IsKeyPressed(0x42)) //F9
@@ -224,22 +228,32 @@ int Debugger::initGFX()
       freeRun = false;
     }
 
-    if (freeRun)
-    {
-      cpu.execute();
-    }
-
+    ImGui::Columns(3, nullptr, false);
     if (ImGui::Button("Step (F10)"))
     {
       cpu.execute();
     }
+
+    ImGui::NextColumn();
     if (ImGui::Button("Freerun (F5)"))
     {
       freeRun = true;
+      //always take one step, to get out of breakpoint
+      cpu.execute();
     }
+    ImGui::NextColumn();
     if (ImGui::Button("Stop (F9)"))
     {
       freeRun = false;
+    }
+
+    ImGui::Columns(2, nullptr, false);
+    ImGui::Checkbox("Breakpoint", &breakPoint);
+    ImGui::NextColumn();
+    ImGuiInputTextFlags flags = ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_NoHorizontalScroll | ImGuiInputTextFlags_AlwaysInsertMode;
+    if(ImGui::InputText("##breakpoint", breakpointVal, 5, flags))
+    {
+      breakPoint = true;
     }
     ImGui::End();
 
@@ -259,6 +273,14 @@ int Debugger::initGFX()
       for (uint32_t i = 0; i < msPassed * 1049; i += cpu.getLastCycle())
       {
         cpu.execute();
+        if (breakPoint)
+        {
+          if (cpu.getPC() == (uint32_t)strtol(breakpointVal, NULL, 16))
+          {
+            freeRun = false;
+            break;
+          }
+        }
       }
     }
   }
