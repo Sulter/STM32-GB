@@ -2,6 +2,7 @@
 #include "../include/Cpu.h"
 #include "../include/Memory.h"
 #include "../include/RegisterDebug.h"
+#include "../include/TileViewer.h"
 #include "../lib/imgui_club/imgui_memory_editor/imgui_memory_editor.h"
 #include <imgui.h>
 #include <string>
@@ -18,6 +19,7 @@ private:
   static int regValChange(ImGuiInputTextCallbackData *data);
 
   RegisterDebug regDebug;
+  TileViewer tileViewer;
   Cpu cpu;
   Memory MMU;
   MemoryEditor memEditor;

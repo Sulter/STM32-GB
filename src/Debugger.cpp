@@ -176,6 +176,11 @@ int Debugger::initGFX()
       ImGui::End();
     }
 
+    //Tile viewer window
+    tileViewer.DrawWindow("Tile viewer", MMU.getMemory());
+
+    //Gameboy drawing window
+
     //Registers window
     regDebug.DrawWindow("Registers");
 
@@ -210,7 +215,6 @@ int Debugger::initGFX()
     ImGui::EndGroup();
     ImGui::NewLine();
     
-
     if (ImGui::IsKeyPressed(0x43)) //F10
     {
       cpu.execute();
@@ -251,7 +255,7 @@ int Debugger::initGFX()
     ImGui::Checkbox("Breakpoint", &breakPoint);
     ImGui::NextColumn();
     ImGuiInputTextFlags flags = ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_NoHorizontalScroll | ImGuiInputTextFlags_AlwaysInsertMode;
-    if(ImGui::InputText("##breakpoint", breakpointVal, 5, flags))
+    if (ImGui::InputText("##breakpoint", breakpointVal, 5, flags))
     {
       breakPoint = true;
     }
