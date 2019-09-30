@@ -217,10 +217,26 @@ void Cpu::ldDn()
 
 void Cpu::rlA()
 {
+  // uint8_t temp = regs.regA & (0x80);
+  // regs.regA <<= 1;
+  // regs.regA |= regs.flagC;
+  
+  // setFlag(0, 0, 0, 3, temp, 0xff);
+
+
+
   uint8_t temp = regs.regA & (0x80);
   regs.regA <<= 1;
   regs.regA |= regs.flagC;
-  setFlag(0, 0, 0, 3, temp, 0xff);
+
+  regs.flagZ = 0;
+  regs.flagN = 0;
+  regs.flagH = 0;
+  regs.flagC = bool(temp);
+
+
+
+
 
   lastCycle = 4;
   regs.pc++;
@@ -1282,10 +1298,15 @@ void Cpu::cpn()
 
 void Cpu::CBRLC()
 {
-  uint8_t temp = regs.regL & (0x80);
-  regs.regL <<= 1;
-  regs.regL |= regs.flagC;
-  setFlag((regs.regL == 0), 0, 0, 3, temp, 0xff);
+  uint8_t temp = regs.regC & (0x80);
+  regs.regC <<= 1;
+  regs.regC |= regs.flagC;
+
+  regs.flagZ = bool(regs.regC == 0);
+  regs.flagN = 0;
+  regs.flagH = 0;
+  regs.flagC = bool(temp);
+  // setFlag((regs.regL == 0), 0, 0, 3, temp, 0xff);
 
   lastCycle = 8;
   regs.pc++;

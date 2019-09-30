@@ -35,6 +35,32 @@ TEST_F(OpcodeTest, ldSPnnByte)
   EXPECT_EQ(getRegisters().sp, 0xcdab);
 }
 
+TEST_F(OpcodeTest, rlC)
+{
+  getRegisters().regC = 0xaa;
+  runOpcode(0x11 + 0xff);
+  EXPECT_EQ(getRegisters().regC, 0x54);
+  EXPECT_TRUE(getRegisters().flagC);
+  runOpcode(0x11 + 0xff);
+
+
+  EXPECT_EQ(getRegisters().regC, 0xa9);
+  EXPECT_FALSE(getRegisters().flagC);
+}
+
+TEST_F(OpcodeTest, rlA)
+{
+  getRegisters().regA = 0xaa;
+  runOpcode(0x17);
+  EXPECT_EQ(getRegisters().regA, 0x54);
+  EXPECT_TRUE(getRegisters().flagC);
+  runOpcode(0x17);
+
+
+  EXPECT_EQ(getRegisters().regA, 0xa9);
+  EXPECT_FALSE(getRegisters().flagC);
+}
+
 TEST_F(OpcodeTest, pushNpop)
 {
   getMMU().writeByte(1, 0xff);
@@ -50,6 +76,9 @@ TEST_F(OpcodeTest, pushNpop)
   EXPECT_EQ(getRegisters().regC, 0xab);
 
   runOpcode(static_cast<uint16_t>(instructions::pushBC));
+
+  getRegisters().regB = 0x00;
+  getRegisters().regC = 0xff;
 
   EXPECT_EQ(getRegisters().sp, 0x00ff - 2);
   EXPECT_EQ(getMMU().readByte(getRegisters().sp),  0xcd);
