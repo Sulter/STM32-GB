@@ -185,6 +185,7 @@ int Debugger::initGFX()
     tileViewer.DrawWindow("Tile viewer", MMU.getMemory());
 
     //Gameboy drawing window
+    displayViewer.DrawWindow("Gameboy", MMU.getMemory());
 
     //Registers window
     regDebug.DrawWindow("Registers");

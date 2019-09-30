@@ -3,6 +3,7 @@
 #include "../include/Memory.h"
 #include "../include/RegisterDebug.h"
 #include "../include/TileViewer.h"
+#include "../include/DisplayViewer.h"
 #include "../lib/imgui_club/imgui_memory_editor/imgui_memory_editor.h"
 #include <imgui.h>
 #include <string>
@@ -20,6 +21,7 @@ private:
 
   RegisterDebug regDebug;
   TileViewer tileViewer;
+  DisplayViewer displayViewer;
   Cpu cpu;
   Memory MMU;
   MemoryEditor memEditor;
