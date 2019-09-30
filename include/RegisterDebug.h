@@ -29,11 +29,36 @@ private:
   std::string label;
 };
 
-template <size_t N>
+template <typename T>
 class DebugRegisterFlag : public DebugReg
 {
-  public:
-  private:
+public:
+  DebugRegisterFlag(std::string name, T *val) : DebugReg(name), reg(val){};
+
+  size_t getBufLenght()
+  {
+    return editBufLenght;
+  }
+
+  char *getEditBuf()
+  {
+    if (*reg == 0)
+      sprintf(editBuf, "-");
+    else
+      sprintf(editBuf, "%c", getName()[0]);
+
+    return editBuf;
+  }
+
+  void applyBuffer()
+  {
+    *reg = (unsigned int)strtol(editBuf, NULL, 10);
+  }
+
+private:
+  static constexpr size_t editBufLenght = 2;
+  char editBuf[editBufLenght];
+  T *reg = nullptr;
 };
 
 template <typename T>

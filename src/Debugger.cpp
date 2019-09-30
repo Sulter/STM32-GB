@@ -24,6 +24,11 @@ Debugger::Debugger() : cpu(MMU)
   regDebug.registers.push_back(std::make_unique<DebugRegister<uint8_t>>("E", &regRef.regE));
   regDebug.registers.push_back(std::make_unique<DebugRegister<uint8_t>>("H", &regRef.regH));
   regDebug.registers.push_back(std::make_unique<DebugRegister<uint8_t>>("L", &regRef.regL));
+
+  regDebug.registers.push_back(std::make_unique<DebugRegisterFlag<uint8_t>>("Carry", &regRef.flagC));
+  regDebug.registers.push_back(std::make_unique<DebugRegisterFlag<uint8_t>>("Half", &regRef.flagH));
+  regDebug.registers.push_back(std::make_unique<DebugRegisterFlag<uint8_t>>("Zero", &regRef.flagZ));
+  regDebug.registers.push_back(std::make_unique<DebugRegisterFlag<uint8_t>>("Sub", &regRef.flagN));
 }
 
 int Debugger::initGFX()
@@ -214,7 +219,7 @@ int Debugger::initGFX()
     ImGui::Separator();
     ImGui::EndGroup();
     ImGui::NewLine();
-    
+
     if (ImGui::IsKeyPressed(0x43)) //F10
     {
       cpu.execute();
