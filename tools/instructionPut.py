@@ -9,7 +9,9 @@ with open("instructions.txt") as f:
         instr = instr.replace("void", "")
         nr = line.split("/")[2]
         nr = nr.rstrip("\n")
-        print("opcodes[%s] = std::bind(&Cpu::%s, this);" % (nr, instr))
+        #print("opcodes[%s] = std::bind(&Cpu::%s, this);" % (nr, instr))
+        #print("%s = %s, " % (instr, nr))
+        print("{\"%s\", %s}," % (instr, nr))
 
         instrL.append(nr)
 

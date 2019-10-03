@@ -1,0 +1,662 @@
+#pragma once
+#include <cstdint>
+#include <string>
+#include <array>
+#include <algorithm>
+#include <map>
+
+struct Code
+{
+  uint16_t opcode;
+  std::string mnemonic;
+  uint8_t lenght;
+  uint8_t cycles;
+  std::string flags;
+};
+
+class Disassembler
+{
+public:
+  static constexpr size_t nrInstructions = 501;
+  Code operator()(uint16_t opcode)
+  {
+    for (auto i : mnemonics)
+    {
+      if (i.opcode == opcode)
+        return i;
+    }
+    return invalid;
+  };
+
+  Code operator()(std::string mnemonic)
+  {
+    for (auto i : mnemonics)
+    {
+      if (simplifyMnemonic(i.mnemonic) == simplifyMnemonic(mnemonic))
+        return i;
+    }
+    return invalid;
+  };
+
+  Code disassemble(uint16_t pc, std::array<uint16_t, 3> opcodes)
+  {
+    //see if already dissambled
+    auto search = disassembler.find(pc);
+    if (search != disassembler.end())
+    {
+      return search->second;
+    }
+    else
+    {
+      Code code = (*this)(opcodes[0]);
+      if (code.lenght > 1) //handle instructions with data
+      {
+        return handleLongInstruction(code, pc, opcodes);
+      }
+      else if (code.opcode == 0xcb) //handle cb instructions
+      {
+        disassembler[pc] = code;
+        disassembler[pc + 1] = (*this)(opcodes[1] + 0xff + 1);
+        return code;
+      }
+      else //handle normal 1-byte instructions
+      {
+        disassembler[pc] = code;
+        return code;
+      }
+    }
+  }
+
+  friend std::ostream &operator<<(std::ostream &out, const Disassembler &b)
+  {
+    for (auto const &[key, val] : b.disassembler)
+    {
+      if (val.mnemonic != "inv" && val.mnemonic != "DATA" && val.mnemonic != "PREFIX CB")
+      {
+        static const int desiredWidth = 15;
+        int spaceNr = desiredWidth - val.mnemonic.length();
+        std::string spaces;
+        spaces.append(spaceNr, ' ');
+        out << val.mnemonic
+            << spaces
+            << "; $"
+            << std::hex
+            << key
+            << std::endl;
+      }
+    }
+    return out;
+  }
+
+private:
+  Code handleLongInstruction(Code code, uint16_t pc, std::array<uint16_t, 3> opcodes)
+  {
+    if (code.lenght == 2)
+    {
+      static const size_t strLenght = 5;
+      char str[strLenght];
+      sprintf(str, "$%02x", opcodes[1]);
+
+      if(findAndReplace(code.mnemonic, "d8", str) || findAndReplace(code.mnemonic, "a8", str))
+      {
+        disassembler[pc + 1] = data;
+      }
+
+      sprintf(str, "%+d", static_cast<int8_t>(opcodes[1]));
+      if(findAndReplace(code.mnemonic, "r8", str))
+      {
+        disassembler[pc + 1] = data;
+      }
+
+      disassembler[pc] = code;
+      return code;
+    }
+    else
+    {
+      disassembler[pc + 1] = data;
+      disassembler[pc + 2] = data;
+
+      static const size_t strLenght = 6;
+      char str[strLenght];
+      sprintf(str, "$%02x%02x", opcodes[2], opcodes[1]);
+
+      findAndReplace(code.mnemonic, "d16", str);
+      findAndReplace(code.mnemonic, "a16", str);
+
+      disassembler[pc] = code;
+      return code;
+    }
+  }
+
+  bool findAndReplace(std::string &str, std::string find, std::string replacement)
+  {
+    size_t index = str.find(find);
+    if (index != std::string::npos)
+    {
+      str.replace(index, find.length(), replacement);
+      return true;
+    }
+    else
+    {
+      return false;
+    }
+  }
+
+  std::string simplifyMnemonic(std::string str)
+  {
+    std::transform(str.begin(), str.end(), str.begin(),
+                   [](unsigned char c) { return std::tolower(c); });
+    std::replace(str.begin(), str.end(), '(', ' ');
+    std::replace(str.begin(), str.end(), ')', ' ');
+    std::replace(str.begin(), str.end(), ',', ' ');
+    str.erase(std::remove_if(str.begin(), str.end(), isspace), str.end());
+    return str;
+  }
+
+  Code invalid = {0xffff, "INV", 0, 0, ""};
+  Code data = {0xffff, "DATA", 0, 0, ""};
+  std::map<uint16_t, Code> disassembler;
+  std::array<Code, nrInstructions> mnemonics =
+      {
+          0x0, "NOP", 1, 4, "----",
+          0x1, "LD BC,d16", 3, 12, "----",
+          0x2, "LD (BC),A", 1, 8, "----",
+          0x3, "INC BC", 1, 8, "----",
+          0x4, "INC B", 1, 4, "Z0H-",
+          0x5, "DEC B", 1, 4, "Z1H-",
+          0x6, "LD B,d8", 2, 8, "----",
+          0x7, "RLCA", 1, 4, "000C",
+          0x8, "LD (a16),SP", 3, 20, "----",
+          0x9, "ADD HL,BC", 1, 8, "-0HC",
+          0xa, "LD A,(BC)", 1, 8, "----",
+          0xb, "DEC BC", 1, 8, "----",
+          0xc, "INC C", 1, 4, "Z0H-",
+          0xd, "DEC C", 1, 4, "Z1H-",
+          0xe, "LD C,d8", 2, 8, "----",
+          0xf, "RRCA", 1, 4, "000C",
+          0x10, "STOP 0", 2, 4, "----",
+          0x11, "LD DE,d16", 3, 12, "----",
+          0x12, "LD (DE),A", 1, 8, "----",
+          0x13, "INC DE", 1, 8, "----",
+          0x14, "INC D", 1, 4, "Z0H-",
+          0x15, "DEC D", 1, 4, "Z1H-",
+          0x16, "LD D,d8", 2, 8, "----",
+          0x17, "RLA", 1, 4, "000C",
+          0x18, "JR r8", 2, 12, "----",
+          0x19, "ADD HL,DE", 1, 8, "-0HC",
+          0x1a, "LD A,(DE)", 1, 8, "----",
+          0x1b, "DEC DE", 1, 8, "----",
+          0x1c, "INC E", 1, 4, "Z0H-",
+          0x1d, "DEC E", 1, 4, "Z1H-",
+          0x1e, "LD E,d8", 2, 8, "----",
+          0x1f, "RRA", 1, 4, "000C",
+          0x20, "JR NZ,r8", 2, 12, "----",
+          0x21, "LD HL,d16", 3, 12, "----",
+          0x22, "LD (HL+),A", 1, 8, "----",
+          0x23, "INC HL", 1, 8, "----",
+          0x24, "INC H", 1, 4, "Z0H-",
+          0x25, "DEC H", 1, 4, "Z1H-",
+          0x26, "LD H,d8", 2, 8, "----",
+          0x27, "DAA", 1, 4, "Z-0C",
+          0x28, "JR Z,r8", 2, 12, "----",
+          0x29, "ADD HL,HL", 1, 8, "-0HC",
+          0x2a, "LD A,(HL+)", 1, 8, "----",
+          0x2b, "DEC HL", 1, 8, "----",
+          0x2c, "INC L", 1, 4, "Z0H-",
+          0x2d, "DEC L", 1, 4, "Z1H-",
+          0x2e, "LD L,d8", 2, 8, "----",
+          0x2f, "CPL", 1, 4, "-11-",
+          0x30, "JR NC,r8", 2, 12, "----",
+          0x31, "LD SP,d16", 3, 12, "----",
+          0x32, "LD (HL-),A", 1, 8, "----",
+          0x33, "INC SP", 1, 8, "----",
+          0x34, "INC (HL)", 1, 12, "Z0H-",
+          0x35, "DEC (HL)", 1, 12, "Z1H-",
+          0x36, "LD (HL),d8", 2, 12, "----",
+          0x37, "SCF", 1, 4, "-001",
+          0x38, "JR C,r8", 2, 12, "----",
+          0x39, "ADD HL,SP", 1, 8, "-0HC",
+          0x3a, "LD A,(HL-)", 1, 8, "----",
+          0x3b, "DEC SP", 1, 8, "----",
+          0x3c, "INC A", 1, 4, "Z0H-",
+          0x3d, "DEC A", 1, 4, "Z1H-",
+          0x3e, "LD A,d8", 2, 8, "----",
+          0x3f, "CCF", 1, 4, "-00C",
+          0x40, "LD B,B", 1, 4, "----",
+          0x41, "LD B,C", 1, 4, "----",
+          0x42, "LD B,D", 1, 4, "----",
+          0x43, "LD B,E", 1, 4, "----",
+          0x44, "LD B,H", 1, 4, "----",
+          0x45, "LD B,L", 1, 4, "----",
+          0x46, "LD B,(HL)", 1, 8, "----",
+          0x47, "LD B,A", 1, 4, "----",
+          0x48, "LD C,B", 1, 4, "----",
+          0x49, "LD C,C", 1, 4, "----",
+          0x4a, "LD C,D", 1, 4, "----",
+          0x4b, "LD C,E", 1, 4, "----",
+          0x4c, "LD C,H", 1, 4, "----",
+          0x4d, "LD C,L", 1, 4, "----",
+          0x4e, "LD C,(HL)", 1, 8, "----",
+          0x4f, "LD C,A", 1, 4, "----",
+          0x50, "LD D,B", 1, 4, "----",
+          0x51, "LD D,C", 1, 4, "----",
+          0x52, "LD D,D", 1, 4, "----",
+          0x53, "LD D,E", 1, 4, "----",
+          0x54, "LD D,H", 1, 4, "----",
+          0x55, "LD D,L", 1, 4, "----",
+          0x56, "LD D,(HL)", 1, 8, "----",
+          0x57, "LD D,A", 1, 4, "----",
+          0x58, "LD E,B", 1, 4, "----",
+          0x59, "LD E,C", 1, 4, "----",
+          0x5a, "LD E,D", 1, 4, "----",
+          0x5b, "LD E,E", 1, 4, "----",
+          0x5c, "LD E,H", 1, 4, "----",
+          0x5d, "LD E,L", 1, 4, "----",
+          0x5e, "LD E,(HL)", 1, 8, "----",
+          0x5f, "LD E,A", 1, 4, "----",
+          0x60, "LD H,B", 1, 4, "----",
+          0x61, "LD H,C", 1, 4, "----",
+          0x62, "LD H,D", 1, 4, "----",
+          0x63, "LD H,E", 1, 4, "----",
+          0x64, "LD H,H", 1, 4, "----",
+          0x65, "LD H,L", 1, 4, "----",
+          0x66, "LD H,(HL)", 1, 8, "----",
+          0x67, "LD H,A", 1, 4, "----",
+          0x68, "LD L,B", 1, 4, "----",
+          0x69, "LD L,C", 1, 4, "----",
+          0x6a, "LD L,D", 1, 4, "----",
+          0x6b, "LD L,E", 1, 4, "----",
+          0x6c, "LD L,H", 1, 4, "----",
+          0x6d, "LD L,L", 1, 4, "----",
+          0x6e, "LD L,(HL)", 1, 8, "----",
+          0x6f, "LD L,A", 1, 4, "----",
+          0x70, "LD (HL),B", 1, 8, "----",
+          0x71, "LD (HL),C", 1, 8, "----",
+          0x72, "LD (HL),D", 1, 8, "----",
+          0x73, "LD (HL),E", 1, 8, "----",
+          0x74, "LD (HL),H", 1, 8, "----",
+          0x75, "LD (HL),L", 1, 8, "----",
+          0x76, "HALT", 1, 4, "----",
+          0x77, "LD (HL),A", 1, 8, "----",
+          0x78, "LD A,B", 1, 4, "----",
+          0x79, "LD A,C", 1, 4, "----",
+          0x7a, "LD A,D", 1, 4, "----",
+          0x7b, "LD A,E", 1, 4, "----",
+          0x7c, "LD A,H", 1, 4, "----",
+          0x7d, "LD A,L", 1, 4, "----",
+          0x7e, "LD A,(HL)", 1, 8, "----",
+          0x7f, "LD A,A", 1, 4, "----",
+          0x80, "ADD A,B", 1, 4, "Z0HC",
+          0x81, "ADD A,C", 1, 4, "Z0HC",
+          0x82, "ADD A,D", 1, 4, "Z0HC",
+          0x83, "ADD A,E", 1, 4, "Z0HC",
+          0x84, "ADD A,H", 1, 4, "Z0HC",
+          0x85, "ADD A,L", 1, 4, "Z0HC",
+          0x86, "ADD A,(HL)", 1, 8, "Z0HC",
+          0x87, "ADD A,A", 1, 4, "Z0HC",
+          0x88, "ADC A,B", 1, 4, "Z0HC",
+          0x89, "ADC A,C", 1, 4, "Z0HC",
+          0x8a, "ADC A,D", 1, 4, "Z0HC",
+          0x8b, "ADC A,E", 1, 4, "Z0HC",
+          0x8c, "ADC A,H", 1, 4, "Z0HC",
+          0x8d, "ADC A,L", 1, 4, "Z0HC",
+          0x8e, "ADC A,(HL)", 1, 8, "Z0HC",
+          0x8f, "ADC A,A", 1, 4, "Z0HC",
+          0x90, "SUB B", 1, 4, "Z1HC",
+          0x91, "SUB C", 1, 4, "Z1HC",
+          0x92, "SUB D", 1, 4, "Z1HC",
+          0x93, "SUB E", 1, 4, "Z1HC",
+          0x94, "SUB H", 1, 4, "Z1HC",
+          0x95, "SUB L", 1, 4, "Z1HC",
+          0x96, "SUB (HL)", 1, 8, "Z1HC",
+          0x97, "SUB A", 1, 4, "Z1HC",
+          0x98, "SBC A,B", 1, 4, "Z1HC",
+          0x99, "SBC A,C", 1, 4, "Z1HC",
+          0x9a, "SBC A,D", 1, 4, "Z1HC",
+          0x9b, "SBC A,E", 1, 4, "Z1HC",
+          0x9c, "SBC A,H", 1, 4, "Z1HC",
+          0x9d, "SBC A,L", 1, 4, "Z1HC",
+          0x9e, "SBC A,(HL)", 1, 8, "Z1HC",
+          0x9f, "SBC A,A", 1, 4, "Z1HC",
+          0xa0, "AND B", 1, 4, "Z010",
+          0xa1, "AND C", 1, 4, "Z010",
+          0xa2, "AND D", 1, 4, "Z010",
+          0xa3, "AND E", 1, 4, "Z010",
+          0xa4, "AND H", 1, 4, "Z010",
+          0xa5, "AND L", 1, 4, "Z010",
+          0xa6, "AND (HL)", 1, 8, "Z010",
+          0xa7, "AND A", 1, 4, "Z010",
+          0xa8, "XOR B", 1, 4, "Z000",
+          0xa9, "XOR C", 1, 4, "Z000",
+          0xaa, "XOR D", 1, 4, "Z000",
+          0xab, "XOR E", 1, 4, "Z000",
+          0xac, "XOR H", 1, 4, "Z000",
+          0xad, "XOR L", 1, 4, "Z000",
+          0xae, "XOR (HL)", 1, 8, "Z000",
+          0xaf, "XOR A", 1, 4, "Z000",
+          0xb0, "OR B", 1, 4, "Z000",
+          0xb1, "OR C", 1, 4, "Z000",
+          0xb2, "OR D", 1, 4, "Z000",
+          0xb3, "OR E", 1, 4, "Z000",
+          0xb4, "OR H", 1, 4, "Z000",
+          0xb5, "OR L", 1, 4, "Z000",
+          0xb6, "OR (HL)", 1, 8, "Z000",
+          0xb7, "OR A", 1, 4, "Z000",
+          0xb8, "CP B", 1, 4, "Z1HC",
+          0xb9, "CP C", 1, 4, "Z1HC",
+          0xba, "CP D", 1, 4, "Z1HC",
+          0xbb, "CP E", 1, 4, "Z1HC",
+          0xbc, "CP H", 1, 4, "Z1HC",
+          0xbd, "CP L", 1, 4, "Z1HC",
+          0xbe, "CP (HL)", 1, 8, "Z1HC",
+          0xbf, "CP A", 1, 4, "Z1HC",
+          0xc0, "RET NZ", 1, 20, "----",
+          0xc1, "POP BC", 1, 12, "----",
+          0xc2, "JP NZ,a16", 3, 16, "----",
+          0xc3, "JP a16", 3, 16, "----",
+          0xc4, "CALL NZ,a16", 3, 24, "----",
+          0xc5, "PUSH BC", 1, 16, "----",
+          0xc6, "ADD A,d8", 2, 8, "Z0HC",
+          0xc7, "RST 00H", 1, 16, "----",
+          0xc8, "RET Z", 1, 20, "----",
+          0xc9, "RET", 1, 16, "----",
+          0xca, "JP Z,a16", 3, 16, "----",
+          0xcb, "PREFIX CB", 1, 4, "----",
+          0xcc, "CALL Z,a16", 3, 24, "----",
+          0xcd, "CALL a16", 3, 24, "----",
+          0xce, "ADC A,d8", 2, 8, "Z0HC",
+          0xcf, "RST 08H", 1, 16, "----",
+          0xd0, "RET NC", 1, 20, "----",
+          0xd1, "POP DE", 1, 12, "----",
+          0xd2, "JP NC,a16", 3, 16, "----",
+          0xd4, "CALL NC,a16", 3, 24, "----",
+          0xd5, "PUSH DE", 1, 16, "----",
+          0xd6, "SUB d8", 2, 8, "Z1HC",
+          0xd7, "RST 10H", 1, 16, "----",
+          0xd8, "RET C", 1, 20, "----",
+          0xd9, "RETI", 1, 16, "----",
+          0xda, "JP C,a16", 3, 16, "----",
+          0xdc, "CALL C,a16", 3, 24, "----",
+          0xde, "SBC A,d8", 2, 8, "Z1HC",
+          0xdf, "RST 18H", 1, 16, "----",
+          0xe0, "LDH (a8),A", 2, 12, "----",
+          0xe1, "POP HL", 1, 12, "----",
+          0xe2, "LD (C),A", 2, 8, "----",
+          0xe5, "PUSH HL", 1, 16, "----",
+          0xe6, "AND d8", 2, 8, "Z010",
+          0xe7, "RST 20H", 1, 16, "----",
+          0xe8, "ADD SP,r8", 2, 16, "00HC",
+          0xe9, "JP (HL)", 1, 4, "----",
+          0xea, "LD (a16),A", 3, 16, "----",
+          0xee, "XOR d8", 2, 8, "Z000",
+          0xef, "RST 28H", 1, 16, "----",
+          0xf0, "LDH A,(a8)", 2, 12, "----",
+          0xf1, "POP AF", 1, 12, "ZNHC",
+          0xf2, "LD A,(C)", 2, 8, "----",
+          0xf3, "DI", 1, 4, "----",
+          0xf5, "PUSH AF", 1, 16, "----",
+          0xf6, "OR d8", 2, 8, "Z000",
+          0xf7, "RST 30H", 1, 16, "----",
+          0xf8, "LD HL,SP+r8", 2, 12, "00HC",
+          0xf9, "LD SP,HL", 1, 8, "----",
+          0xfa, "LD A,(a16)", 3, 16, "----",
+          0xfb, "EI", 1, 4, "----",
+          0xfe, "CP d8", 2, 8, "Z1HC",
+          0xff, "RST 38H", 1, 16, "----",
+          0x100, "RLC B", 2, 8, "Z00C",
+          0x101, "RLC C", 2, 8, "Z00C",
+          0x102, "RLC D", 2, 8, "Z00C",
+          0x103, "RLC E", 2, 8, "Z00C",
+          0x104, "RLC H", 2, 8, "Z00C",
+          0x105, "RLC L", 2, 8, "Z00C",
+          0x106, "RLC (HL)", 2, 16, "Z00C",
+          0x107, "RLC A", 2, 8, "Z00C",
+          0x108, "RRC B", 2, 8, "Z00C",
+          0x109, "RRC C", 2, 8, "Z00C",
+          0x10a, "RRC D", 2, 8, "Z00C",
+          0x10b, "RRC E", 2, 8, "Z00C",
+          0x10c, "RRC H", 2, 8, "Z00C",
+          0x10d, "RRC L", 2, 8, "Z00C",
+          0x10e, "RRC (HL)", 2, 16, "Z00C",
+          0x10f, "RRC A", 2, 8, "Z00C",
+          0x110, "RL B", 2, 8, "Z00C",
+          0x111, "RL C", 2, 8, "Z00C",
+          0x112, "RL D", 2, 8, "Z00C",
+          0x113, "RL E", 2, 8, "Z00C",
+          0x114, "RL H", 2, 8, "Z00C",
+          0x115, "RL L", 2, 8, "Z00C",
+          0x116, "RL (HL)", 2, 16, "Z00C",
+          0x117, "RL A", 2, 8, "Z00C",
+          0x118, "RR B", 2, 8, "Z00C",
+          0x119, "RR C", 2, 8, "Z00C",
+          0x11a, "RR D", 2, 8, "Z00C",
+          0x11b, "RR E", 2, 8, "Z00C",
+          0x11c, "RR H", 2, 8, "Z00C",
+          0x11d, "RR L", 2, 8, "Z00C",
+          0x11e, "RR (HL)", 2, 16, "Z00C",
+          0x11f, "RR A", 2, 8, "Z00C",
+          0x120, "SLA B", 2, 8, "Z00C",
+          0x121, "SLA C", 2, 8, "Z00C",
+          0x122, "SLA D", 2, 8, "Z00C",
+          0x123, "SLA E", 2, 8, "Z00C",
+          0x124, "SLA H", 2, 8, "Z00C",
+          0x125, "SLA L", 2, 8, "Z00C",
+          0x126, "SLA (HL)", 2, 16, "Z00C",
+          0x127, "SLA A", 2, 8, "Z00C",
+          0x128, "SRA B", 2, 8, "Z000",
+          0x129, "SRA C", 2, 8, "Z000",
+          0x12a, "SRA D", 2, 8, "Z000",
+          0x12b, "SRA E", 2, 8, "Z000",
+          0x12c, "SRA H", 2, 8, "Z000",
+          0x12d, "SRA L", 2, 8, "Z000",
+          0x12e, "SRA (HL)", 2, 16, "Z000",
+          0x12f, "SRA A", 2, 8, "Z000",
+          0x130, "SWAP B", 2, 8, "Z000",
+          0x131, "SWAP C", 2, 8, "Z000",
+          0x132, "SWAP D", 2, 8, "Z000",
+          0x133, "SWAP E", 2, 8, "Z000",
+          0x134, "SWAP H", 2, 8, "Z000",
+          0x135, "SWAP L", 2, 8, "Z000",
+          0x136, "SWAP (HL)", 2, 16, "Z000",
+          0x137, "SWAP A", 2, 8, "Z000",
+          0x138, "SRL B", 2, 8, "Z00C",
+          0x139, "SRL C", 2, 8, "Z00C",
+          0x13a, "SRL D", 2, 8, "Z00C",
+          0x13b, "SRL E", 2, 8, "Z00C",
+          0x13c, "SRL H", 2, 8, "Z00C",
+          0x13d, "SRL L", 2, 8, "Z00C",
+          0x13e, "SRL (HL)", 2, 16, "Z00C",
+          0x13f, "SRL A", 2, 8, "Z00C",
+          0x140, "BIT 0,B", 2, 8, "Z01-",
+          0x141, "BIT 0,C", 2, 8, "Z01-",
+          0x142, "BIT 0,D", 2, 8, "Z01-",
+          0x143, "BIT 0,E", 2, 8, "Z01-",
+          0x144, "BIT 0,H", 2, 8, "Z01-",
+          0x145, "BIT 0,L", 2, 8, "Z01-",
+          0x146, "BIT 0,(HL)", 2, 16, "Z01-",
+          0x147, "BIT 0,A", 2, 8, "Z01-",
+          0x148, "BIT 1,B", 2, 8, "Z01-",
+          0x149, "BIT 1,C", 2, 8, "Z01-",
+          0x14a, "BIT 1,D", 2, 8, "Z01-",
+          0x14b, "BIT 1,E", 2, 8, "Z01-",
+          0x14c, "BIT 1,H", 2, 8, "Z01-",
+          0x14d, "BIT 1,L", 2, 8, "Z01-",
+          0x14e, "BIT 1,(HL)", 2, 16, "Z01-",
+          0x14f, "BIT 1,A", 2, 8, "Z01-",
+          0x150, "BIT 2,B", 2, 8, "Z01-",
+          0x151, "BIT 2,C", 2, 8, "Z01-",
+          0x152, "BIT 2,D", 2, 8, "Z01-",
+          0x153, "BIT 2,E", 2, 8, "Z01-",
+          0x154, "BIT 2,H", 2, 8, "Z01-",
+          0x155, "BIT 2,L", 2, 8, "Z01-",
+          0x156, "BIT 2,(HL)", 2, 16, "Z01-",
+          0x157, "BIT 2,A", 2, 8, "Z01-",
+          0x158, "BIT 3,B", 2, 8, "Z01-",
+          0x159, "BIT 3,C", 2, 8, "Z01-",
+          0x15a, "BIT 3,D", 2, 8, "Z01-",
+          0x15b, "BIT 3,E", 2, 8, "Z01-",
+          0x15c, "BIT 3,H", 2, 8, "Z01-",
+          0x15d, "BIT 3,L", 2, 8, "Z01-",
+          0x15e, "BIT 3,(HL)", 2, 16, "Z01-",
+          0x15f, "BIT 3,A", 2, 8, "Z01-",
+          0x160, "BIT 4,B", 2, 8, "Z01-",
+          0x161, "BIT 4,C", 2, 8, "Z01-",
+          0x162, "BIT 4,D", 2, 8, "Z01-",
+          0x163, "BIT 4,E", 2, 8, "Z01-",
+          0x164, "BIT 4,H", 2, 8, "Z01-",
+          0x165, "BIT 4,L", 2, 8, "Z01-",
+          0x166, "BIT 4,(HL)", 2, 16, "Z01-",
+          0x167, "BIT 4,A", 2, 8, "Z01-",
+          0x168, "BIT 5,B", 2, 8, "Z01-",
+          0x169, "BIT 5,C", 2, 8, "Z01-",
+          0x16a, "BIT 5,D", 2, 8, "Z01-",
+          0x16b, "BIT 5,E", 2, 8, "Z01-",
+          0x16c, "BIT 5,H", 2, 8, "Z01-",
+          0x16d, "BIT 5,L", 2, 8, "Z01-",
+          0x16e, "BIT 5,(HL)", 2, 16, "Z01-",
+          0x16f, "BIT 5,A", 2, 8, "Z01-",
+          0x170, "BIT 6,B", 2, 8, "Z01-",
+          0x171, "BIT 6,C", 2, 8, "Z01-",
+          0x172, "BIT 6,D", 2, 8, "Z01-",
+          0x173, "BIT 6,E", 2, 8, "Z01-",
+          0x174, "BIT 6,H", 2, 8, "Z01-",
+          0x175, "BIT 6,L", 2, 8, "Z01-",
+          0x176, "BIT 6,(HL)", 2, 16, "Z01-",
+          0x177, "BIT 6,A", 2, 8, "Z01-",
+          0x178, "BIT 7,B", 2, 8, "Z01-",
+          0x179, "BIT 7,C", 2, 8, "Z01-",
+          0x17a, "BIT 7,D", 2, 8, "Z01-",
+          0x17b, "BIT 7,E", 2, 8, "Z01-",
+          0x17c, "BIT 7,H", 2, 8, "Z01-",
+          0x17d, "BIT 7,L", 2, 8, "Z01-",
+          0x17e, "BIT 7,(HL)", 2, 16, "Z01-",
+          0x17f, "BIT 7,A", 2, 8, "Z01-",
+          0x180, "RES 0,B", 2, 8, "----",
+          0x181, "RES 0,C", 2, 8, "----",
+          0x182, "RES 0,D", 2, 8, "----",
+          0x183, "RES 0,E", 2, 8, "----",
+          0x184, "RES 0,H", 2, 8, "----",
+          0x185, "RES 0,L", 2, 8, "----",
+          0x186, "RES 0,(HL)", 2, 16, "----",
+          0x187, "RES 0,A", 2, 8, "----",
+          0x188, "RES 1,B", 2, 8, "----",
+          0x189, "RES 1,C", 2, 8, "----",
+          0x18a, "RES 1,D", 2, 8, "----",
+          0x18b, "RES 1,E", 2, 8, "----",
+          0x18c, "RES 1,H", 2, 8, "----",
+          0x18d, "RES 1,L", 2, 8, "----",
+          0x18e, "RES 1,(HL)", 2, 16, "----",
+          0x18f, "RES 1,A", 2, 8, "----",
+          0x190, "RES 2,B", 2, 8, "----",
+          0x191, "RES 2,C", 2, 8, "----",
+          0x192, "RES 2,D", 2, 8, "----",
+          0x193, "RES 2,E", 2, 8, "----",
+          0x194, "RES 2,H", 2, 8, "----",
+          0x195, "RES 2,L", 2, 8, "----",
+          0x196, "RES 2,(HL)", 2, 16, "----",
+          0x197, "RES 2,A", 2, 8, "----",
+          0x198, "RES 3,B", 2, 8, "----",
+          0x199, "RES 3,C", 2, 8, "----",
+          0x19a, "RES 3,D", 2, 8, "----",
+          0x19b, "RES 3,E", 2, 8, "----",
+          0x19c, "RES 3,H", 2, 8, "----",
+          0x19d, "RES 3,L", 2, 8, "----",
+          0x19e, "RES 3,(HL)", 2, 16, "----",
+          0x19f, "RES 3,A", 2, 8, "----",
+          0x1a0, "RES 4,B", 2, 8, "----",
+          0x1a1, "RES 4,C", 2, 8, "----",
+          0x1a2, "RES 4,D", 2, 8, "----",
+          0x1a3, "RES 4,E", 2, 8, "----",
+          0x1a4, "RES 4,H", 2, 8, "----",
+          0x1a5, "RES 4,L", 2, 8, "----",
+          0x1a6, "RES 4,(HL)", 2, 16, "----",
+          0x1a7, "RES 4,A", 2, 8, "----",
+          0x1a8, "RES 5,B", 2, 8, "----",
+          0x1a9, "RES 5,C", 2, 8, "----",
+          0x1aa, "RES 5,D", 2, 8, "----",
+          0x1ab, "RES 5,E", 2, 8, "----",
+          0x1ac, "RES 5,H", 2, 8, "----",
+          0x1ad, "RES 5,L", 2, 8, "----",
+          0x1ae, "RES 5,(HL)", 2, 16, "----",
+          0x1af, "RES 5,A", 2, 8, "----",
+          0x1b0, "RES 6,B", 2, 8, "----",
+          0x1b1, "RES 6,C", 2, 8, "----",
+          0x1b2, "RES 6,D", 2, 8, "----",
+          0x1b3, "RES 6,E", 2, 8, "----",
+          0x1b4, "RES 6,H", 2, 8, "----",
+          0x1b5, "RES 6,L", 2, 8, "----",
+          0x1b6, "RES 6,(HL)", 2, 16, "----",
+          0x1b7, "RES 6,A", 2, 8, "----",
+          0x1b8, "RES 7,B", 2, 8, "----",
+          0x1b9, "RES 7,C", 2, 8, "----",
+          0x1ba, "RES 7,D", 2, 8, "----",
+          0x1bb, "RES 7,E", 2, 8, "----",
+          0x1bc, "RES 7,H", 2, 8, "----",
+          0x1bd, "RES 7,L", 2, 8, "----",
+          0x1be, "RES 7,(HL)", 2, 16, "----",
+          0x1bf, "RES 7,A", 2, 8, "----",
+          0x1c0, "SET 0,B", 2, 8, "----",
+          0x1c1, "SET 0,C", 2, 8, "----",
+          0x1c2, "SET 0,D", 2, 8, "----",
+          0x1c3, "SET 0,E", 2, 8, "----",
+          0x1c4, "SET 0,H", 2, 8, "----",
+          0x1c5, "SET 0,L", 2, 8, "----",
+          0x1c6, "SET 0,(HL)", 2, 16, "----",
+          0x1c7, "SET 0,A", 2, 8, "----",
+          0x1c8, "SET 1,B", 2, 8, "----",
+          0x1c9, "SET 1,C", 2, 8, "----",
+          0x1ca, "SET 1,D", 2, 8, "----",
+          0x1cb, "SET 1,E", 2, 8, "----",
+          0x1cc, "SET 1,H", 2, 8, "----",
+          0x1cd, "SET 1,L", 2, 8, "----",
+          0x1ce, "SET 1,(HL)", 2, 16, "----",
+          0x1cf, "SET 1,A", 2, 8, "----",
+          0x1d0, "SET 2,B", 2, 8, "----",
+          0x1d1, "SET 2,C", 2, 8, "----",
+          0x1d2, "SET 2,D", 2, 8, "----",
+          0x1d3, "SET 2,E", 2, 8, "----",
+          0x1d4, "SET 2,H", 2, 8, "----",
+          0x1d5, "SET 2,L", 2, 8, "----",
+          0x1d6, "SET 2,(HL)", 2, 16, "----",
+          0x1d7, "SET 2,A", 2, 8, "----",
+          0x1d8, "SET 3,B", 2, 8, "----",
+          0x1d9, "SET 3,C", 2, 8, "----",
+          0x1da, "SET 3,D", 2, 8, "----",
+          0x1db, "SET 3,E", 2, 8, "----",
+          0x1dc, "SET 3,H", 2, 8, "----",
+          0x1dd, "SET 3,L", 2, 8, "----",
+          0x1de, "SET 3,(HL)", 2, 16, "----",
+          0x1df, "SET 3,A", 2, 8, "----",
+          0x1e0, "SET 4,B", 2, 8, "----",
+          0x1e1, "SET 4,C", 2, 8, "----",
+          0x1e2, "SET 4,D", 2, 8, "----",
+          0x1e3, "SET 4,E", 2, 8, "----",
+          0x1e4, "SET 4,H", 2, 8, "----",
+          0x1e5, "SET 4,L", 2, 8, "----",
+          0x1e6, "SET 4,(HL)", 2, 16, "----",
+          0x1e7, "SET 4,A", 2, 8, "----",
+          0x1e8, "SET 5,B", 2, 8, "----",
+          0x1e9, "SET 5,C", 2, 8, "----",
+          0x1ea, "SET 5,D", 2, 8, "----",
+          0x1eb, "SET 5,E", 2, 8, "----",
+          0x1ec, "SET 5,H", 2, 8, "----",
+          0x1ed, "SET 5,L", 2, 8, "----",
+          0x1ee, "SET 5,(HL)", 2, 16, "----",
+          0x1ef, "SET 5,A", 2, 8, "----",
+          0x1f0, "SET 6,B", 2, 8, "----",
+          0x1f1, "SET 6,C", 2, 8, "----",
+          0x1f2, "SET 6,D", 2, 8, "----",
+          0x1f3, "SET 6,E", 2, 8, "----",
+          0x1f4, "SET 6,H", 2, 8, "----",
+          0x1f5, "SET 6,L", 2, 8, "----",
+          0x1f6, "SET 6,(HL)", 2, 16, "----",
+          0x1f7, "SET 6,A", 2, 8, "----",
+          0x1f8, "SET 7,B", 2, 8, "----",
+          0x1f9, "SET 7,C", 2, 8, "----",
+          0x1fa, "SET 7,D", 2, 8, "----",
+          0x1fb, "SET 7,E", 2, 8, "----",
+          0x1fc, "SET 7,H", 2, 8, "----",
+          0x1fd, "SET 7,L", 2, 8, "----",
+          0x1fe, "SET 7,(HL)", 2, 16, "----",
+          0x1ff, "SET 7,A", 2, 8, "----"};
+};

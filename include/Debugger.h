@@ -4,6 +4,7 @@
 #include "../include/RegisterDebug.h"
 #include "../include/TileViewer.h"
 #include "../include/DisplayViewer.h"
+#include "../include/Disassembler.h"
 #include "../lib/imgui_club/imgui_memory_editor/imgui_memory_editor.h"
 #include <imgui.h>
 #include <string>
@@ -25,6 +26,7 @@ private:
   Cpu cpu;
   Memory MMU;
   MemoryEditor memEditor;
+  Disassembler mnemonic;
 
   bool freeRun = false;
   bool breakPoint = false;

@@ -1,6 +1,7 @@
 #include "../include/Debugger.h"
 #include <SDL.h>
 #include <glad/glad.h>
+#include <sstream>
 #include "../lib/imgui/examples/imgui_impl_sdl.h"
 #include "../lib/imgui/examples/imgui_impl_opengl3.h"
 
@@ -196,10 +197,12 @@ int Debugger::initGFX()
     //Debugger window
     ImGui::Begin("Debugger");
     ImGui::BeginGroup();
-    ImGui::Columns(2, nullptr, true);
+    ImGui::Columns(3, nullptr, true);
     ImGui::Text("Address");
     ImGui::NextColumn();
     ImGui::Text("Value");
+    ImGui::NextColumn();
+    ImGui::Text("Mnemonic");
     ImGui::Separator();
     ImGui::NextColumn();
 
@@ -207,12 +210,25 @@ int Debugger::initGFX()
     ImGui::NextColumn();
     ImGui::Text("%02x", MMU.readByte(cpu.getPC() - 1));
     ImGui::NextColumn();
+    ImGui::NextColumn();
+
     char buf[5];
     sprintf(buf, "%04x", cpu.getPC());
     ImGui::Selectable(buf, true, ImGuiSelectableFlags_SpanAllColumns);
     ImGui::NextColumn();
     ImGui::Text("%02x", MMU.readByte(cpu.getPC()));
     ImGui::NextColumn();
+    ImGui::Text("%s", mnemonic.disassemble(cpu.getPC(), {MMU.readByte(cpu.getPC()), MMU.readByte(cpu.getPC() + 1), MMU.readByte(cpu.getPC() + 2)}).mnemonic.c_str()); //mnemonic(MMU.readByte(cpu.getPC())).mnemonic.c_str());
+    if (ImGui::IsItemHovered())
+    {
+      ImGui::BeginTooltip();
+      ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+      ImGui::Text("%s", mnemonic(MMU.readByte(cpu.getPC())).flags.c_str());
+      ImGui::PopTextWrapPos();
+      ImGui::EndTooltip();
+    }
+    ImGui::NextColumn();
+
     ImGui::Text("%04x", cpu.getPC() + 1);
     ImGui::NextColumn();
     ImGui::Text("%02x", MMU.readByte(cpu.getPC() + 1));
@@ -265,6 +281,18 @@ int Debugger::initGFX()
     {
       breakPoint = true;
     }
+    ImGui::Columns(1, nullptr, false);
+    static ImGuiTextBuffer log;
+    if (ImGui::Button("disassemble"))
+    {
+      log.clear();
+      std::ostringstream stream;
+      stream << mnemonic;
+      std::string str = stream.str();
+      log.appendf("%s", str.c_str());
+      ImGui::SetClipboardText(str.c_str());
+    }
+    ImGui::TextUnformatted(log.begin(), log.end());
     ImGui::End();
 
     // Rendering
@@ -283,6 +311,7 @@ int Debugger::initGFX()
       for (uint32_t i = 0; i < msPassed * 1049; i += cpu.getLastCycle())
       {
         cpu.execute();
+        mnemonic.disassemble(cpu.getPC(), {MMU.readByte(cpu.getPC()), MMU.readByte(cpu.getPC() + 1), MMU.readByte(cpu.getPC() + 2)});
         if (breakPoint)
         {
           if (cpu.getPC() == (uint32_t)strtol(breakpointVal, NULL, 16))
