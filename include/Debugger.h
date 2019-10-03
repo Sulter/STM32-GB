@@ -18,6 +18,8 @@ public:
   int initGFX();
 
 private:
+  void debugWindow();
+  void showInstr(uint16_t pc, bool middle);
   static int regValChange(ImGuiInputTextCallbackData *data);
 
   RegisterDebug regDebug;

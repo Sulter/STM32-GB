@@ -195,105 +195,7 @@ int Debugger::initGFX()
     memEditor.DrawWindow("Memory", MMU.getMemory(), Memory::memorySize);
 
     //Debugger window
-    ImGui::Begin("Debugger");
-    ImGui::BeginGroup();
-    ImGui::Columns(3, nullptr, true);
-    ImGui::Text("Address");
-    ImGui::NextColumn();
-    ImGui::Text("Value");
-    ImGui::NextColumn();
-    ImGui::Text("Mnemonic");
-    ImGui::Separator();
-    ImGui::NextColumn();
-
-    ImGui::Text("%04x", cpu.getPC() - 1);
-    ImGui::NextColumn();
-    ImGui::Text("%02x", MMU.readByte(cpu.getPC() - 1));
-    ImGui::NextColumn();
-    ImGui::NextColumn();
-
-    char buf[5];
-    sprintf(buf, "%04x", cpu.getPC());
-    ImGui::Selectable(buf, true, ImGuiSelectableFlags_SpanAllColumns);
-    ImGui::NextColumn();
-    ImGui::Text("%02x", MMU.readByte(cpu.getPC()));
-    ImGui::NextColumn();
-    ImGui::Text("%s", mnemonic.disassemble(cpu.getPC(), {MMU.readByte(cpu.getPC()), MMU.readByte(cpu.getPC() + 1), MMU.readByte(cpu.getPC() + 2)}).mnemonic.c_str()); //mnemonic(MMU.readByte(cpu.getPC())).mnemonic.c_str());
-    if (ImGui::IsItemHovered())
-    {
-      ImGui::BeginTooltip();
-      ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
-      ImGui::Text("%s", mnemonic(MMU.readByte(cpu.getPC())).flags.c_str());
-      ImGui::PopTextWrapPos();
-      ImGui::EndTooltip();
-    }
-    ImGui::NextColumn();
-
-    ImGui::Text("%04x", cpu.getPC() + 1);
-    ImGui::NextColumn();
-    ImGui::Text("%02x", MMU.readByte(cpu.getPC() + 1));
-    ImGui::Columns(1);
-    ImGui::Separator();
-    ImGui::EndGroup();
-    ImGui::NewLine();
-
-    if (ImGui::IsKeyPressed(0x43)) //F10
-    {
-      cpu.execute();
-    }
-
-    if (ImGui::IsKeyPressed(0x3E)) //F5
-    {
-      freeRun = true;
-      //always take one step, to get out of breakpoint
-      cpu.execute();
-    }
-
-    if (ImGui::IsKeyPressed(0x42)) //F9
-    {
-      freeRun = false;
-    }
-
-    ImGui::Columns(3, nullptr, false);
-    if (ImGui::Button("Step (F10)"))
-    {
-      cpu.execute();
-    }
-
-    ImGui::NextColumn();
-    if (ImGui::Button("Freerun (F5)"))
-    {
-      freeRun = true;
-      //always take one step, to get out of breakpoint
-      cpu.execute();
-    }
-    ImGui::NextColumn();
-    if (ImGui::Button("Stop (F9)"))
-    {
-      freeRun = false;
-    }
-
-    ImGui::Columns(2, nullptr, false);
-    ImGui::Checkbox("Breakpoint", &breakPoint);
-    ImGui::NextColumn();
-    ImGuiInputTextFlags flags = ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_NoHorizontalScroll | ImGuiInputTextFlags_AlwaysInsertMode;
-    if (ImGui::InputText("##breakpoint", breakpointVal, 5, flags))
-    {
-      breakPoint = true;
-    }
-    ImGui::Columns(1, nullptr, false);
-    static ImGuiTextBuffer log;
-    if (ImGui::Button("disassemble"))
-    {
-      log.clear();
-      std::ostringstream stream;
-      stream << mnemonic;
-      std::string str = stream.str();
-      log.appendf("%s", str.c_str());
-      ImGui::SetClipboardText(str.c_str());
-    }
-    ImGui::TextUnformatted(log.begin(), log.end());
-    ImGui::End();
+    debugWindow();
 
     // Rendering
     ImGui::Render();
@@ -334,4 +236,132 @@ int Debugger::initGFX()
   SDL_Quit();
 
   return 0;
+}
+
+void Debugger::showInstr(uint16_t pc, bool middle)
+{
+  std::array<uint16_t, 3> opcodes = {MMU.readByte(pc), MMU.readByte(pc + 1), MMU.readByte((pc) + 2)};
+
+  char buf[5];
+  sprintf(buf, "%04x", pc);
+
+  if (middle)
+    ImGui::Selectable(buf, true, ImGuiSelectableFlags_SpanAllColumns);
+  else
+    ImGui::Text("%s", buf);
+
+  ImGui::NextColumn();
+  ImGui::Text("%02x", opcodes[0]);
+  ImGui::NextColumn();
+  ImGui::Text("%s", mnemonic.disassemble(pc, opcodes).mnemonic.c_str()); //mnemonic(MMU.readByte(cpu.getPC())).mnemonic.c_str());
+  if (ImGui::IsItemHovered())
+  {
+    ImGui::BeginTooltip();
+    ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+    ImGui::Text("%s", mnemonic(opcodes[0]).flags.c_str());
+    ImGui::PopTextWrapPos();
+    ImGui::EndTooltip();
+  }
+  ImGui::NextColumn();
+}
+
+void Debugger::debugWindow()
+{
+  ImGui::Begin("Debugger");
+  ImGui::BeginGroup();
+  ImGui::Columns(3, nullptr, true);
+  ImGui::Text("Address");
+  ImGui::NextColumn();
+  ImGui::Text("Value");
+  ImGui::NextColumn();
+  ImGui::Text("Mnemonic");
+  ImGui::Separator();
+  ImGui::NextColumn();
+
+  static const int instrPeakNr = 3;
+  for (int i = instrPeakNr; i > 0; i--)
+  {
+    uint16_t pc = cpu.getPC();
+    if (pc == 0)
+      break;
+
+    pc -= i;
+
+    if (abs(cpu.getPC() - pc) > instrPeakNr)
+      continue;
+    showInstr(pc, false);
+
+    if (pc == 0)
+      break;
+  }
+
+  showInstr(cpu.getPC(), true);
+
+  for (int i = 1; i < instrPeakNr + 1; i++)
+  {
+    showInstr(cpu.getPC() + i, false);
+  }
+
+  ImGui::Columns(1);
+  ImGui::Separator();
+  ImGui::EndGroup();
+  ImGui::NewLine();
+
+  if (ImGui::IsKeyPressed(0x43)) //F10
+  {
+    cpu.execute();
+  }
+
+  if (ImGui::IsKeyPressed(0x3E)) //F5
+  {
+    freeRun = true;
+    //always take one step, to get out of breakpoint
+    cpu.execute();
+  }
+
+  if (ImGui::IsKeyPressed(0x42)) //F9
+  {
+    freeRun = false;
+  }
+
+  ImGui::Columns(3, nullptr, false);
+  if (ImGui::Button("Step (F10)"))
+  {
+    cpu.execute();
+  }
+
+  ImGui::NextColumn();
+  if (ImGui::Button("Freerun (F5)"))
+  {
+    freeRun = true;
+    //always take one step, to get out of breakpoint
+    cpu.execute();
+  }
+  ImGui::NextColumn();
+  if (ImGui::Button("Stop (F9)"))
+  {
+    freeRun = false;
+  }
+
+  ImGui::Columns(2, nullptr, false);
+  ImGui::Checkbox("Breakpoint", &breakPoint);
+  ImGui::NextColumn();
+  ImGuiInputTextFlags flags = ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_NoHorizontalScroll | ImGuiInputTextFlags_AlwaysInsertMode;
+  if (ImGui::InputText("##breakpoint", breakpointVal, 5, flags))
+  {
+    breakPoint = true;
+  }
+  ImGui::Columns(1, nullptr, false);
+  static ImGuiTextBuffer log;
+  if (ImGui::Button("disassemble"))
+  {
+    log.clear();
+    std::ostringstream stream;
+    stream << mnemonic;
+    std::string str = stream.str();
+    log.appendf("%s", str.c_str());
+    ImGui::SetClipboardText(str.c_str());
+  }
+  ImGui::TextUnformatted(log.begin(), log.end());
+  ImGui::End();
 }
