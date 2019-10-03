@@ -36,9 +36,9 @@ add_library (glad lib/glad/src/glad.c)
 string(STRIP ${SDL2_LIBRARIES} SDL2_LIBRARIES)
 
 #executable
-add_executable (gba src/Cpu.cpp src/main.cpp src/Memory.cpp src/opcodes.cpp src/Lcd.cpp src/Debugger.cpp)
+add_executable (gba src/Cpu.cpp src/Disassembler.cpp src/main.cpp src/Memory.cpp src/opcodes.cpp src/Lcd.cpp src/Debugger.cpp)
 target_link_libraries (gba ${SDL2_LIBRARIES} ${OPENGL_gl_LIBRARY} imgui glad ${CMAKE_DL_LIBS})
 
 #unit test
-add_executable (unitTest src/test/test.cpp src/test/Disassembler-test.cpp src/test/opcodes-test.cpp src/test/Memory-test.cpp src/test/Cpu-test.cpp src/Cpu.cpp src/opcodes.cpp src/Memory.cpp src/Lcd.cpp)
+add_executable (unitTest src/test/test.cpp src/test/Disassembler-test.cpp src/test/opcodes-test.cpp src/test/Memory-test.cpp src/test/Cpu-test.cpp src/Cpu.cpp src/opcodes.cpp src/Disassembler.cpp src/Memory.cpp src/Lcd.cpp)
 target_link_libraries (unitTest gtest gtest_main pthread)
