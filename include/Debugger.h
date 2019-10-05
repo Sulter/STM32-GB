@@ -14,11 +14,13 @@
 class Debugger
 {
 public:
+  Debugger(std::string fileName);
   Debugger();
   int initGFX();
 
 private:
   void debugWindow();
+  void setupRegisters();
   void showInstr(uint16_t pc, bool middle);
   static int regValChange(ImGuiInputTextCallbackData *data);
 

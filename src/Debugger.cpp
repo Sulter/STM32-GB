@@ -2,10 +2,22 @@
 #include <SDL.h>
 #include <glad/glad.h>
 #include <sstream>
+#include <fstream>
 #include "../lib/imgui/examples/imgui_impl_sdl.h"
 #include "../lib/imgui/examples/imgui_impl_opengl3.h"
 
 uint32_t global = 0xaaffaa;
+
+Debugger::Debugger(std::string fileName) : cpu(MMU)
+{
+  Debugger();
+  std::ifstream file(fileName, std::ios::binary | std::ios::in);
+  file.read(reinterpret_cast<char*>(MMU.getMemory()), MMU.memorySize);
+  file.close();
+  cpu.getRegisters().pc = 0x100;
+  MMU.writeByte(0xff44, 0x94); //$0064, screen frame skip
+  setupRegisters();
+}
 
 Debugger::Debugger() : cpu(MMU)
 {
@@ -13,8 +25,12 @@ Debugger::Debugger() : cpu(MMU)
   MMU.injectBoot();
   MMU.writeByte(0xff44, 0x90); //$0064, screen frame skip
   MMU.writeByte(0x0135, 0xe7); //ensure the checksum is correct
+  setupRegisters();
+}
 
-  //setup register stuff
+void Debugger::setupRegisters()
+{
+    //setup register stuff
   Cpu::registers &regRef = cpu.getRegisters();
   regDebug.registers.push_back(std::make_unique<DebugRegister<uint16_t>>("pc", &regRef.pc));
   regDebug.registers.push_back(std::make_unique<DebugRegister<uint16_t>>("sp", &regRef.sp));
