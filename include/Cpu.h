@@ -258,6 +258,7 @@ private:
   void ldHn();    //0x26
   void jrz();     //0x28
   void addHLHL(); //0x29
+  void ldAHLi();  //0x2A
   void incL();    //0x2C
   void decL();    //0x2D
   void ldLn();    //0x2E
@@ -267,6 +268,7 @@ private:
   void ldSPnn();  //0x31
   void ldiHLAm(); //0x32
   void incSP();   //0x33
+  void HLpn();    //0x36
   void scf();     //0x37
   void ldAn();    //0x38
   void decSP();   //0x3B
@@ -369,10 +371,12 @@ private:
   void xorA(); //0xAF
 
   //B
+  void orC();  //0xB1
   void cpHL(); //0xBE
 
   //C
   void popBC();  //0xC1
+  void jpnn();   //0xC3
   void pushBC(); //0xC5
   void ret();    //0xC9
   void preCB();  //0xCB

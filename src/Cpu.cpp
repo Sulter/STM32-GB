@@ -48,6 +48,7 @@ Cpu::Cpu(Memory &mem) : MMU(mem)
   opcodes[0x26] = std::bind(&Cpu::ldHn, this);
   opcodes[0x28] = std::bind(&Cpu::jrz, this);
   opcodes[0x29] = std::bind(&Cpu::addHLHL, this);
+  opcodes[0x2A] = std::bind(&Cpu::ldAHLi, this);
   opcodes[0x2C] = std::bind(&Cpu::incL, this);
   opcodes[0x2D] = std::bind(&Cpu::decL, this);
   opcodes[0x2E] = std::bind(&Cpu::ldLn, this);
@@ -55,6 +56,7 @@ Cpu::Cpu(Memory &mem) : MMU(mem)
   opcodes[0x31] = std::bind(&Cpu::ldSPnn, this);
   opcodes[0x32] = std::bind(&Cpu::ldiHLAm, this);
   opcodes[0x33] = std::bind(&Cpu::incSP, this);
+  opcodes[0x36] = std::bind(&Cpu::HLpn, this);
   opcodes[0x37] = std::bind(&Cpu::scf, this);
   opcodes[0x3B] = std::bind(&Cpu::decSP, this);
   opcodes[0x3C] = std::bind(&Cpu::incA, this);
@@ -142,7 +144,9 @@ Cpu::Cpu(Memory &mem) : MMU(mem)
   opcodes[0x9F] = std::bind(&Cpu::sbcAA, this);
   opcodes[0xAF] = std::bind(&Cpu::xorA, this);
   opcodes[0xBE] = std::bind(&Cpu::cpHL, this);
+  opcodes[0xB1] = std::bind(&Cpu::orC, this);
   opcodes[0xC1] = std::bind(&Cpu::popBC, this);
+  opcodes[0xC3] = std::bind(&Cpu::jpnn, this);
   opcodes[0xC5] = std::bind(&Cpu::pushBC, this);
   opcodes[0xC9] = std::bind(&Cpu::ret, this);
   opcodes[0xCB] = std::bind(&Cpu::preCB, this);

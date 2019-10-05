@@ -425,6 +425,18 @@ void Cpu::addHLHL()
   regs.pc++;
 }
 
+void Cpu::ldAHLi()
+{
+  regs.regA = MMU.readByte((regs.regH << 8) | regs.regL);
+
+  regs.regL++;
+  if (!regs.regL)
+    regs.regH++;
+
+  lastCycle = 8;
+  regs.pc++;
+}
+
 void Cpu::incL()
 {
   regs.regL++; //increase the register
@@ -494,6 +506,14 @@ void Cpu::incSP()
 
   regs.pc++;
   lastCycle = 8;
+}
+
+void Cpu::HLpn()
+{
+  MMU.writeByte((regs.regH << 8) | regs.regL, MMU.readByte(regs.pc + 1));
+
+  lastCycle = 12;
+  regs.pc+=2;
 }
 
 void Cpu::scf()
@@ -1191,6 +1211,23 @@ void Cpu::cpHL()
   regs.pc ++;
 }
 
+void Cpu::orC()
+{
+  regs.regA |= regs.regC;
+
+  if(regs.regA == 0)
+    regs.flagZ = 1;
+  else
+    regs.flagZ = 0;
+
+  regs.flagC = 0;
+  regs.flagH = 0;
+  regs.flagN = 0;
+  
+  lastCycle = 4;
+  regs.pc++;
+}
+
 /*
 ****************0xCx******************
 */
@@ -1202,6 +1239,13 @@ void Cpu::popBC()
 
   lastCycle = 12;
   regs.pc++;
+}
+
+void Cpu::jpnn()
+{
+  regs.pc = (MMU.readByte(regs.pc+1) | (MMU.readByte(regs.pc+2) << 8));
+
+  lastCycle = 12;
 }
 
 void Cpu::pushBC()
