@@ -12,7 +12,7 @@ Debugger::Debugger(std::string fileName) : cpu(MMU)
 {
   Debugger();
   std::ifstream file(fileName, std::ios::binary | std::ios::in);
-  file.read(reinterpret_cast<char*>(MMU.getMemory()), MMU.memorySize);
+  file.read(reinterpret_cast<char *>(MMU.getMemory()), MMU.memorySize);
   file.close();
   cpu.getRegisters().pc = 0x100;
   MMU.writeByte(0xff44, 0x94); //$0064, screen frame skip
@@ -30,7 +30,7 @@ Debugger::Debugger() : cpu(MMU)
 
 void Debugger::setupRegisters()
 {
-    //setup register stuff
+  //setup register stuff
   Cpu::registers &regRef = cpu.getRegisters();
   regDebug.registers.push_back(std::make_unique<DebugRegister<uint16_t>>("pc", &regRef.pc));
   regDebug.registers.push_back(std::make_unique<DebugRegister<uint16_t>>("sp", &regRef.sp));
@@ -368,6 +368,12 @@ void Debugger::debugWindow()
     breakPoint = true;
   }
   ImGui::Columns(1, nullptr, false);
+  
+  if (ImGui::Button("Step back"))
+  {
+    cpu.stepBack();
+  }
+
   static ImGuiTextBuffer log;
   if (ImGui::Button("disassemble"))
   {
