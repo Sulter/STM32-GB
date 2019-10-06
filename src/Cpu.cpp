@@ -183,8 +183,23 @@ void Cpu::runOpcode(uint16_t opcode)
   totalCycles += lastCycle;
 }
 
+void Cpu::stepBack()
+{
+  if (!stateHistory.empty())
+  {
+    CpuState cpuState;
+    cpuState = stateHistory.front();
+    stateHistory.pop_front();
+    applyState(cpuState, *this);
+  }
+}
+
 void Cpu::execute()
 {
+  if (tracing)
+  {
+    pushState(*this);
+  }
   runOpcode(fetchOpcode() + CB);
 }
 

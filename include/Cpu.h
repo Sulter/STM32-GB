@@ -3,12 +3,12 @@
 #include <functional>
 #include <iostream>
 #include <cstdio>
+#include <deque>
 #include "../include/Memory.h"
 
 //TODO: move from std::function to function pointers
 //TODO: rewrite all the copy-pasted opcodes into templates (depending on register, so we still end up with individual functions)
 //TODO: make setFlag override share the 99% of the code they share....
-//TODO: instructions for bootstrap ROM:
 
 class Cpu
 {
@@ -22,6 +22,8 @@ public:
 
   //! Executes next instruction
   void execute();
+
+  void stepBack();
 
   //! set stack pointer, program counter, and the registers to 0
   void reset();
@@ -415,6 +417,36 @@ private:
 
   static constexpr uint8_t CBval = 0xff;
   uint8_t CB;
+
+  bool tracing = true;
+  static constexpr size_t stepBackMaxSize = 200;
+
+  struct CpuState
+  {
+    uint32_t totalCycles;
+    uint8_t lastCycle;
+    uint8_t CB;
+    registers regs;
+    Memory MMU;
+  };
+
+  std::deque<CpuState> stateHistory;
+  void pushState(Cpu &cpu)
+  {
+    stateHistory.push_front({cpu.totalCycles, cpu.lastCycle, cpu.CB, cpu.regs, cpu.MMU});
+    if (stateHistory.size() > stepBackMaxSize)
+    {
+      stateHistory.pop_back();
+    }
+  }
+  void applyState(CpuState &state, Cpu &cpu)
+  {
+    cpu.totalCycles = state.totalCycles;
+    cpu.lastCycle = state.lastCycle;
+    cpu.CB = state.CB;
+    cpu.regs = state.regs;
+    cpu.MMU = state.MMU;
+  }
 
   registers regs = {};
 
