@@ -1181,6 +1181,15 @@ void Cpu::sbcAA()
 ****************0xAx******************
 */
 
+void Cpu::xorC()
+{
+  regs.regA ^= regs.regC;
+
+  setFlag(2, 0, 0, 0, regs.regA, 1);
+  lastCycle = 4;
+  regs.pc++;
+}
+
 void Cpu::xorA()
 {
   regs.regA = regs.regA ^ regs.regA;
@@ -1201,6 +1210,23 @@ void Cpu::cpHL()
   setFlag(2, 1, 3, 3, tmp, MMU.readByte((regs.regH << 8) | regs.regL)); //"Z 1 H C"
 
   lastCycle = 8;
+  regs.pc++;
+}
+
+void Cpu::orB()
+{
+  regs.regA |= regs.regB;
+
+  if (regs.regA == 0)
+    regs.flagZ = 1;
+  else
+    regs.flagZ = 0;
+
+  regs.flagC = 0;
+  regs.flagH = 0;
+  regs.flagN = 0;
+
+  lastCycle = 4;
   regs.pc++;
 }
 

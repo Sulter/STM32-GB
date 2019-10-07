@@ -370,9 +370,11 @@ private:
   void sbcAA(); //0x9F
 
   //A
+  void xorC(); //0xA9
   void xorA(); //0xAF
 
   //B
+  void orB();  //0xB0
   void orC();  //0xB1
   void cpHL(); //0xBE
 
