@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 #include "../../include/Cpu.h"
 #include "../../include/Memory.h"
+#include "../../include/Disassembler.h"
 
 // The fixture for testing class Foo.
 class OpcodeTest : public Cpu, public ::testing::Test
@@ -23,6 +24,7 @@ protected:
   }
 
   Memory MMU;
+  Disassembler disassembler;
 };
 
 TEST_F(OpcodeTest, ldSPnnByte)
@@ -38,12 +40,12 @@ TEST_F(OpcodeTest, ldSPnnByte)
 TEST_F(OpcodeTest, rlC)
 {
   getRegisters().regC = 0xaa;
-  runOpcode(0x11 + 0xff);
+  runOpcode(disassembler("PREFIX CB").opcode);
+  runOpcode(disassembler("RL C").opcode);
   EXPECT_EQ(getRegisters().regC, 0x54);
   EXPECT_TRUE(getRegisters().flagC);
-  runOpcode(0x11 + 0xff);
-
-
+  runOpcode(disassembler("PREFIX CB").opcode);
+  runOpcode(disassembler("RL C").opcode);
   EXPECT_EQ(getRegisters().regC, 0xa9);
   EXPECT_FALSE(getRegisters().flagC);
 }
@@ -56,9 +58,17 @@ TEST_F(OpcodeTest, rlA)
   EXPECT_TRUE(getRegisters().flagC);
   runOpcode(0x17);
 
-
   EXPECT_EQ(getRegisters().regA, 0xa9);
   EXPECT_FALSE(getRegisters().flagC);
+}
+
+TEST_F(OpcodeTest, swapA)
+{
+  getRegisters().regA = 0xdb;
+  runOpcode(disassembler("PREFIX CB").opcode);
+  runOpcode(disassembler("SWAP A").opcode);
+  EXPECT_EQ(getRegisters().regA, 0xbd);
+  EXPECT_FALSE(getRegisters().flagZ);
 }
 
 TEST_F(OpcodeTest, pushNpop)
@@ -69,7 +79,7 @@ TEST_F(OpcodeTest, pushNpop)
 
   getMMU().writeByte(getRegisters().pc + 1, 0xab);
   getMMU().writeByte(getRegisters().pc + 2, 0xcd);
-  
+
   runOpcode(static_cast<uint16_t>(instructions::ldBCnn));
 
   EXPECT_EQ(getRegisters().regB, 0xcd);
@@ -81,13 +91,12 @@ TEST_F(OpcodeTest, pushNpop)
   getRegisters().regC = 0xff;
 
   EXPECT_EQ(getRegisters().sp, 0x00ff - 2);
-  EXPECT_EQ(getMMU().readByte(getRegisters().sp),  0xcd);
-  EXPECT_EQ(getMMU().readByte(getRegisters().sp + 1),  0xab);
+  EXPECT_EQ(getMMU().readByte(getRegisters().sp), 0xcd);
+  EXPECT_EQ(getMMU().readByte(getRegisters().sp + 1), 0xab);
 
   runOpcode(static_cast<uint16_t>(instructions::popBC));
   EXPECT_EQ(getRegisters().sp, 0x00ff);
 
   EXPECT_EQ(getRegisters().regB, 0xcd);
   EXPECT_EQ(getRegisters().regC, 0xab);
-
 }

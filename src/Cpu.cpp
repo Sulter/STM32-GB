@@ -152,6 +152,7 @@ Cpu::Cpu(Memory &mem) : MMU(mem)
   opcodes[0xCB] = std::bind(&Cpu::preCB, this);
   opcodes[0xCD] = std::bind(&Cpu::callnn, this);
   opcodes[0xE0] = std::bind(&Cpu::ldhnA, this);
+  opcodes[0xE6] = std::bind(&Cpu::andn, this);
   opcodes[0xEA] = std::bind(&Cpu::ldnnA, this);
   opcodes[0xE2] = std::bind(&Cpu::ldCCA, this);
   opcodes[0xF0] = std::bind(&Cpu::ldhAn, this);
@@ -159,6 +160,7 @@ Cpu::Cpu(Memory &mem) : MMU(mem)
 
   //CB
   opcodes[0x11 + CBval] = std::bind(&Cpu::CBRLC, this);
+  opcodes[0x37 + CBval] = std::bind(&Cpu::CBswapA, this);
   opcodes[0x7C + CBval] = std::bind(&Cpu::CBbit7H, this);
 }
 

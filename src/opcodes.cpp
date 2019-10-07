@@ -220,10 +220,8 @@ void Cpu::rlA()
   // uint8_t temp = regs.regA & (0x80);
   // regs.regA <<= 1;
   // regs.regA |= regs.flagC;
-  
+
   // setFlag(0, 0, 0, 3, temp, 0xff);
-
-
 
   uint8_t temp = regs.regA & (0x80);
   regs.regA <<= 1;
@@ -233,10 +231,6 @@ void Cpu::rlA()
   regs.flagN = 0;
   regs.flagH = 0;
   regs.flagC = bool(temp);
-
-
-
-
 
   lastCycle = 4;
   regs.pc++;
@@ -513,7 +507,7 @@ void Cpu::HLpn()
   MMU.writeByte((regs.regH << 8) | regs.regL, MMU.readByte(regs.pc + 1));
 
   lastCycle = 12;
-  regs.pc+=2;
+  regs.pc += 2;
 }
 
 void Cpu::scf()
@@ -959,7 +953,6 @@ void Cpu::addAHL()
   regs.pc++;
 }
 
-
 void Cpu::addAA()
 {
   regs.regA += regs.regA;
@@ -1208,14 +1201,14 @@ void Cpu::cpHL()
   setFlag(2, 1, 3, 3, tmp, MMU.readByte((regs.regH << 8) | regs.regL)); //"Z 1 H C"
 
   lastCycle = 8;
-  regs.pc ++;
+  regs.pc++;
 }
 
 void Cpu::orC()
 {
   regs.regA |= regs.regC;
 
-  if(regs.regA == 0)
+  if (regs.regA == 0)
     regs.flagZ = 1;
   else
     regs.flagZ = 0;
@@ -1223,7 +1216,7 @@ void Cpu::orC()
   regs.flagC = 0;
   regs.flagH = 0;
   regs.flagN = 0;
-  
+
   lastCycle = 4;
   regs.pc++;
 }
@@ -1243,7 +1236,7 @@ void Cpu::popBC()
 
 void Cpu::jpnn()
 {
-  regs.pc = (MMU.readByte(regs.pc+1) | (MMU.readByte(regs.pc+2) << 8));
+  regs.pc = (MMU.readByte(regs.pc + 1) | (MMU.readByte(regs.pc + 2) << 8));
 
   lastCycle = 12;
 }
@@ -1261,6 +1254,7 @@ void Cpu::pushBC()
 void Cpu::ret()
 {
   regs.pc = ((MMU.readByte(regs.sp) << 8) | MMU.readByte(regs.sp + 1));
+  regs.pc++;
   regs.sp += 2;
   lastCycle = 8;
 }
@@ -1297,6 +1291,23 @@ void Cpu::ldhnA()
   regs.pc += 2;
 }
 
+void Cpu::andn()
+{
+  regs.regA &= MMU.readByte(regs.pc + 1);
+
+  if (regs.regA == 0)
+    regs.flagZ = 1;
+  else
+    regs.flagZ = 0;
+
+  regs.flagC = 0;
+  regs.flagH = 1;
+  regs.flagN = 0;
+
+  lastCycle = 8;
+  regs.pc += 2;
+}
+
 void Cpu::ldCCA()
 {
   MMU.writeByte(0xff00 + regs.regC, regs.regA);
@@ -1324,7 +1335,6 @@ void Cpu::ldhAn()
   lastCycle = 12;
   regs.pc += 2;
 }
-
 
 void Cpu::cpn()
 {
@@ -1354,6 +1364,21 @@ void Cpu::CBRLC()
 
   lastCycle = 8;
   regs.pc++;
+  CB = 0;
+}
+
+void Cpu::CBswapA()
+{
+  regs.regA = ((regs.regA & 0x0f) << 4) | ((regs.regA & 0xf0) >> 4);
+
+  regs.flagZ = bool(regs.regA == 0);
+  regs.flagN = 0;
+  regs.flagH = 0;
+  regs.flagC = 0;
+
+  lastCycle = 8;
+  regs.pc++;
+
   CB = 0;
 }
 

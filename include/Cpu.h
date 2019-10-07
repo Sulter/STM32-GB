@@ -389,6 +389,7 @@ private:
   //E
   void ldhnA(); //0xE0
   void ldCCA(); //0xE2
+  void andn();  //0xE6
   void ldnnA(); //0xEA
 
   //F
@@ -397,6 +398,9 @@ private:
 
   //CB1
   void CBRLC(); //0x11
+
+  //CB3
+  void CBswapA(); //0x37
 
   //CB7
   void CBbit7H(); //0x7C
@@ -415,8 +419,8 @@ private:
   //! Stores the total amount of clock cycles ran
   uint32_t totalCycles;
 
-  static constexpr uint8_t CBval = 0xff;
-  uint8_t CB;
+  static constexpr uint16_t CBval = 0xff + 1;
+  uint16_t CB;
 
   bool tracing = true;
   static constexpr size_t stepBackMaxSize = 200;
@@ -425,7 +429,7 @@ private:
   {
     uint32_t totalCycles;
     uint8_t lastCycle;
-    uint8_t CB;
+    uint16_t CB;
     registers regs;
     Memory MMU;
   };
