@@ -1,3 +1,4 @@
+dist: bionic
 language: cpp
 before_install:
   - sudo apt-get install libgtest-dev cmake libsdl2-dev
