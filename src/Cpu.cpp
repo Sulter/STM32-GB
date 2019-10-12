@@ -142,6 +142,7 @@ Cpu::Cpu(Memory &mem) : MMU(mem)
   opcodes[0x9C] = std::bind(&Cpu::sbcAH, this);
   opcodes[0x9D] = std::bind(&Cpu::sbcAL, this);
   opcodes[0x9F] = std::bind(&Cpu::sbcAA, this);
+  opcodes[0xA1] = std::bind(&Cpu::andC, this);
   opcodes[0xA9] = std::bind(&Cpu::xorC, this);
   opcodes[0xAF] = std::bind(&Cpu::xorA, this);
   opcodes[0xBE] = std::bind(&Cpu::cpHL, this);
@@ -150,15 +151,24 @@ Cpu::Cpu(Memory &mem) : MMU(mem)
   opcodes[0xC1] = std::bind(&Cpu::popBC, this);
   opcodes[0xC3] = std::bind(&Cpu::jpnn, this);
   opcodes[0xC5] = std::bind(&Cpu::pushBC, this);
+  opcodes[0xC7] = std::bind(&Cpu::rst, this);
   opcodes[0xC9] = std::bind(&Cpu::ret, this);
   opcodes[0xCB] = std::bind(&Cpu::preCB, this);
   opcodes[0xCD] = std::bind(&Cpu::callnn, this);
+  opcodes[0xCF] = std::bind(&Cpu::rst, this);
+  opcodes[0xD7] = std::bind(&Cpu::rst, this);
+  opcodes[0xDF] = std::bind(&Cpu::rst, this);
   opcodes[0xE0] = std::bind(&Cpu::ldhnA, this);
+  opcodes[0xE1] = std::bind(&Cpu::popHL, this);
   opcodes[0xE6] = std::bind(&Cpu::andn, this);
+  opcodes[0xE7] = std::bind(&Cpu::rst, this);
   opcodes[0xEA] = std::bind(&Cpu::ldnnA, this);
   opcodes[0xE2] = std::bind(&Cpu::ldCCA, this);
+  opcodes[0xEF] = std::bind(&Cpu::rst, this);
   opcodes[0xF0] = std::bind(&Cpu::ldhAn, this);
   opcodes[0xFE] = std::bind(&Cpu::cpn, this);
+  opcodes[0xF7] = std::bind(&Cpu::rst, this);
+  opcodes[0xFF] = std::bind(&Cpu::rst, this);
 
   //CB
   opcodes[0x11 + CBval] = std::bind(&Cpu::CBRLC, this);
@@ -183,6 +193,7 @@ std::string Cpu::getInfo(registers reg, uint16_t opcode)
 
 void Cpu::runOpcode(uint16_t opcode)
 {
+  currentOpcode = opcode;
   opcodes[opcode]();
   totalCycles += lastCycle;
 }

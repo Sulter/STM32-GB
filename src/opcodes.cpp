@@ -10,6 +10,30 @@ void Cpu::noInstruction()
   assert(false);
 }
 
+//general instructions
+
+template<typename T>
+void ld(T &a, T &b)
+{
+  a = b;
+}
+
+
+void Cpu::rst()
+{
+  uint8_t rst = (currentOpcode & 0x0f) - 0x07;
+  rst |= (currentOpcode & 0x30);
+
+  MMU.writeByte(--regs.sp, regs.pc + 2);
+  MMU.writeByte(--regs.sp, (regs.pc + 1) >> 8);
+
+  regs.pc = rst;
+
+  lastCycle = 16;
+}
+
+///0x00
+
 void Cpu::nop()
 {
   lastCycle = 4;
@@ -1181,6 +1205,23 @@ void Cpu::sbcAA()
 ****************0xAx******************
 */
 
+void Cpu::andC()
+{
+  regs.regA &= regs.regC;
+
+  if (regs.regA == 0)
+    regs.flagZ = 1;
+  else
+    regs.flagZ = 0;
+
+  regs.flagC = 0;
+  regs.flagH = 1;
+  regs.flagN = 0;
+
+  lastCycle = 4;
+  regs.pc++;
+}
+
 void Cpu::xorC()
 {
   regs.regA ^= regs.regC;
@@ -1315,6 +1356,15 @@ void Cpu::ldhnA()
 
   lastCycle = 12;
   regs.pc += 2;
+}
+
+void Cpu::popHL()
+{
+  regs.regH = MMU.readByte(regs.sp++);
+  regs.regL = MMU.readByte(regs.sp++);
+
+  lastCycle = 12;
+  regs.pc++;
 }
 
 void Cpu::andn()

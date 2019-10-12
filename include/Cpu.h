@@ -215,6 +215,9 @@ public:
 
 private:
   void noInstruction();
+  //general instructions
+  void rst();
+
   /*****************instructions****************/
   void nop();     //0x00
   void ldBCnn();  //0x01
@@ -370,6 +373,7 @@ private:
   void sbcAA(); //0x9F
 
   //A
+  void andC(); //0xA1
   void xorC(); //0xA9
   void xorA(); //0xAF
 
@@ -390,6 +394,7 @@ private:
 
   //E
   void ldhnA(); //0xE0
+  void popHL(); //0xE1
   void ldCCA(); //0xE2
   void andn();  //0xE6
   void ldnnA(); //0xEA
@@ -417,6 +422,8 @@ private:
 
   //! Stores the clock cycles of the last insturction
   uint8_t lastCycle;
+
+  uint16_t currentOpcode;
 
   //! Stores the total amount of clock cycles ran
   uint32_t totalCycles;

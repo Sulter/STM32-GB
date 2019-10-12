@@ -100,3 +100,24 @@ TEST_F(OpcodeTest, pushNpop)
   EXPECT_EQ(getRegisters().regB, 0xcd);
   EXPECT_EQ(getRegisters().regC, 0xab);
 }
+
+TEST_F(OpcodeTest, rst)
+{
+  getRegisters().pc = 0;
+  runOpcode(disassembler("RST 38H").opcode);
+  EXPECT_EQ(getRegisters().pc, 0x38);
+  runOpcode(disassembler("RST 28H").opcode);
+  EXPECT_EQ(getRegisters().pc, 0x28);
+  runOpcode(disassembler("RST 18H").opcode);
+  EXPECT_EQ(getRegisters().pc, 0x18);
+  runOpcode(disassembler("RST 08H").opcode);
+  EXPECT_EQ(getRegisters().pc, 0x08);
+  runOpcode(disassembler("RST 00H").opcode);
+  EXPECT_EQ(getRegisters().pc, 0x00);
+  runOpcode(disassembler("RST 10H").opcode);
+  EXPECT_EQ(getRegisters().pc, 0x10);
+  runOpcode(disassembler("RST 20H").opcode);
+  EXPECT_EQ(getRegisters().pc, 0x20);
+  runOpcode(disassembler("RST 30H").opcode);
+  EXPECT_EQ(getRegisters().pc, 0x30);
+}
